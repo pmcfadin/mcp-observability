@@ -98,6 +98,31 @@ helm install mcp charts/mcp-obs -f my-values.yaml --namespace observability --cr
 ### Drift detection in CI
 A GitHub Actions workflow (`.github/workflows/drift-check.yml`) automatically compares the services defined in `mcp-obs.yml` with the Helm chart dependencies. Pull requests touching either manifest will fail if they diverge. 
 
+## Running as an MCP server
+
+This repository also exposes the service via the **Model Context Protocol** (MCP). Install the extra dependency and run:
+
+```bash
+# install deps (if not already)
+poetry install --with dev
+
+# start the stdio MCP server
+poetry run python -m app.mcp_server
+```
+
+Then add the server in clients such as Claude Desktop or the MCP Inspector:
+
+```json
+{
+  "mcpServers": {
+    "observability": {
+      "command": "poetry",
+      "args": ["run", "python", "-m", "app.mcp_server"]
+    }
+  }
+}
+```
+=======
 ## Authentication & TLS
 
 All MCP Server endpoints are protected by **Bearer-token** authentication and, by default, served over **HTTPS**.
@@ -166,3 +191,4 @@ curl --cert client.crt --key client.key \
 ```
 
 *Replace `certs/` paths with the mounted location inside your dev environment.*
+
