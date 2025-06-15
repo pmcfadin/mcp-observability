@@ -12,8 +12,31 @@ services:
     environment:
       # Point the OpenTelemetry SDK to the collector
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    volumes:
+      - certs:/certs:ro
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --ssl-keyfile
+      - /certs/server.key
+      - --ssl-certfile
+      - /certs/server.crt
     depends_on:
+      - mcp-certgen
       - otel-collector
+
+  # Sidecar generating TLS certificates (self-signed)
+  mcp-certgen:
+    build:
+      context: ./scripts/certgen
+    container_name: mcp-certgen
+    volumes:
+      - certs:/certs
+    restart: on-failure
 
   # OpenTelemetry Collector
   otel-collector:
@@ -79,4 +102,5 @@ volumes:
   loki-data:
   prom-data:
   tempo-data:
-  grafana-data: 
+  grafana-data:
+  certs: 
