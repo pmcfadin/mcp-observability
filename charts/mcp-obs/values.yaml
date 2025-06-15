@@ -1,6 +1,9 @@
 # Default values for mcp-obs umbrella chart.
 
-# Global persistence toggle – override per sub-chart below
+# Global persistence toggle – convenience flag you may reference in overrides;
+# this chart does NOT automatically propagate the value to sub-charts. Use
+# `helm install mcp-obs -f my-values.yaml` and set individual sub-chart
+# persistence flags as desired, or leverage `--set loki.persistence.enabled=true` etc.
 persistence:
   enabled: false
 
@@ -17,15 +20,14 @@ mcpServer:
 # Upstream charts enablement flags – default all true
 loki:
   enabled: true
-  loki:
-    persistence:
-      enabled: false
-      size: 5Gi
+  persistence:
+    enabled: false   # If true, creates PVC via Loki chart
+    size: 5Gi
 
 grafana:
   enabled: true
   persistence:
-    enabled: false
+    enabled: false   # Set to true for PVC backing Grafana data dir
     size: 1Gi
 
 prometheus:
