@@ -1,0 +1,109 @@
+version: "3.9"
+
+services:
+  # MCP Application Server
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile  # TODO: Provide production-ready Dockerfile in later task
+    container_name: mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      # Point the OpenTelemetry SDK to the collector
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    volumes:
+      - certs:/certs:ro
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --ssl-keyfile
+      - /certs/server.key
+      - --ssl-certfile
+      - /certs/server.crt
+    depends_on:
+      - mcp-certgen
+      - otel-collector
+
+  # Sidecar generating TLS certificates (self-signed)
+  mcp-certgen:
+    build:
+      context: ./scripts/certgen
+    container_name: mcp-certgen
+    volumes:
+      - certs:/certs
+    restart: on-failure
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4317:4317" # gRPC
+      - "4318:4318" # HTTP
+    volumes:
+      # Ephemeral storage for collector state (buffers, etc.)
+      - otel-data:/etc/otelcol/data
+
+  # Loki – log aggregation
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+
+  # Prometheus – metrics
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prom-data:/prometheus
+
+  # Tempo – traces backend
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: tempo
+    command: ["-config.file=/etc/tempo/local-config.yaml"]
+    ports:
+      - "3200:3200"
+      - "4319:4319"  # OTLP gRPC (internal)
+    volumes:
+      - tempo-data:/var/tempo
+
+  # Grafana – dashboards UI
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      # Mount provisioning configuration and dashboards JSON from repo
+      - ./grafana/provisioning:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - loki
+      - prometheus
+      - tempo
+
+# Named volumes – remain ephemeral unless mapped externally
+volumes:
+  otel-data:
+  loki-data:
+  prom-data:
+  tempo-data:
+  grafana-data:
+  certs: 

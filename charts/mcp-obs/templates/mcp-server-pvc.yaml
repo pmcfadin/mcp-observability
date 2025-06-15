@@ -1,0 +1,15 @@
+{{- if .Values.mcpServer.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mcp-obs.fullname" . }}-server-pvc
+  labels:
+    {{- include "mcp-obs.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mcpServer.persistence.size }}
+{{- end }} 

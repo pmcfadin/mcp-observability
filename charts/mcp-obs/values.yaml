@@ -1,0 +1,60 @@
+# Default values for mcp-obs umbrella chart.
+
+# Global persistence toggle – convenience flag you may reference in overrides;
+# this chart does NOT automatically propagate the value to sub-charts. Use
+# `helm install mcp-obs -f my-values.yaml` and set individual sub-chart
+# persistence flags as desired, or leverage `--set loki.persistence.enabled=true` etc.
+persistence:
+  enabled: false
+
+# MCP Server image settings
+mcpServer:
+  image:
+    repository: "ghcr.io/your-org/mcp-server"
+    tag: "latest"
+  # Enable PVC for the server (e.g., SQLite, logs)
+  persistence:
+    enabled: false
+    size: 1Gi
+
+# Upstream charts enablement flags – default all true
+loki:
+  enabled: true
+  persistence:
+    enabled: false   # If true, creates PVC via Loki chart
+    size: 5Gi
+
+grafana:
+  enabled: true
+  persistence:
+    enabled: false   # Set to true for PVC backing Grafana data dir
+    size: 1Gi
+
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: false
+      size: 5Gi
+
+tempo:
+  enabled: true
+  persistence:
+    enabled: false
+    size: 5Gi
+
+otelCollector:
+  enabled: true
+  mode: deployment
+  presets:
+    kubernetesAttributes: true
+    kubernetesClusterReceiver: true
+
+# TLS / cert-manager settings for mcp-server
+tls:
+  enabled: true            # When true, chart provisions Certificate & Issuer and mounts secret
+  secretName: mcp-server-tls
+  issuer:
+    create: true           # Create a self-signed Issuer when true
+    name: mcp-selfsigned-issuer
+    kind: Issuer           # "Issuer" or "ClusterIssuer" 
