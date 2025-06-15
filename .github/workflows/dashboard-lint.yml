@@ -1,0 +1,21 @@
+name: Dashboard Lint
+
+on:
+  pull_request:
+    paths:
+      - 'grafana/dashboards/**'
+      - 'scripts/ci/validate_dashboards.py'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install --upgrade pip
+      - name: Validate dashboards
+        run: python scripts/ci/validate_dashboards.py 
