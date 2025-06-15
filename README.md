@@ -96,3 +96,72 @@ helm install mcp charts/mcp-obs -f my-values.yaml --namespace observability --cr
 
 ### Drift detection in CI
 A GitHub Actions workflow (`.github/workflows/drift-check.yml`) automatically compares the services defined in `mcp-obs.yml` with the Helm chart dependencies. Pull requests touching either manifest will fail if they diverge. 
+
+## Authentication & TLS
+
+All MCP Server endpoints are protected by **Bearer-token** authentication and, by default, served over **HTTPS**.
+
+### 1. Setting the token (MCP_TOKEN)
+
+The expected token is read from environment variable `MCP_TOKEN` **inside the server container**.  You must
+provide the *same* token when making requests:
+
+```bash
+# Compose (docker compose up)
+export MCP_TOKEN="s3cr3t"
+
+# Helm
+helm install mcp charts/mcp-obs \
+  --namespace observability --create-namespace \
+  --set mcpServer.env.MCP_TOKEN=$MCP_TOKEN
+```
+
+Requests that omit or supply the wrong token receive `401 Unauthorized`.
+
+### 2. Local HTTPS (Compose)
+
+The `mcp-certgen` sidecar automatically generates a self-signed CA and server certificate (valid 90 days, auto-rotated on restart) and mounts them into `mcp-server`.  Once Compose is up you can hit the `/health` endpoint:
+
+```bash
+curl -k \
+  -H "Authorization: Bearer $MCP_TOKEN" \
+  https://localhost:8000/health
+# → {"status":"ok"}
+```
+
+* `-k` skips certificate verification because the server uses a self-signed cert.
+
+### 3. Kubernetes (cert-manager)
+
+When the chart installs with `tls.enabled=true` (default) it provisions:
+
+* A self-signed `Issuer` named `mcp-selfsigned-issuer`.*
+* A `Certificate` (90 days, `renewBefore: 30d`) stored in secret `mcp-server-tls`.
+
+If you already operate cert-manager with a cluster-wide `ClusterIssuer`, disable issuer creation and reference your own:
+
+```bash
+helm install mcp charts/mcp-obs \
+  --set "tls.issuer.create=false" \
+  --set "tls.issuer.name=letsencrypt-prod" \
+  --set "tls.issuer.kind=ClusterIssuer"
+```
+
+### 4. Example with mTLS client certificate
+
+```bash
+# generate client cert signed by sidecar CA
+openssl req -newkey rsa:2048 -nodes -keyout client.key \
+  -subj "/CN=example-client" -out client.csr
+
+# CA is available at ./certs/ca.crt once compose is up
+openssl x509 -req -in client.csr -CA certs/ca.crt -CAkey certs/ca.key \
+  -CAcreateserial -out client.crt -days 30
+
+curl --cert client.crt --key client.key \
+  -H "Authorization: Bearer $MCP_TOKEN" \
+  https://localhost:8000/health
+# → {"status":"ok"}
+```
+
+*Replace `certs/` paths with the mounted location inside your dev environment.*
