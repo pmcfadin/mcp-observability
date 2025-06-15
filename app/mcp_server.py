@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Any
 
 from mcp.server.fastmcp import FastMCP
 
-from app.main import _fetch_error_logs, _fetch_latency_percentile
+from app.main import _fetch_error_logs, _fetch_latency_percentile, _fetch_trace_json, _fetch_trace_logs
 
 mcp = FastMCP("mcp-observability-server")
 
@@ -39,6 +39,16 @@ async def latency_percentile(
     """
 
     return await _fetch_latency_percentile(percentile, window)
+
+
+@mcp.tool(description="Return raw trace JSON for given trace_id")
+async def trace_json_tool(trace_id: str) -> Any:  # type: ignore[override]
+    return await _fetch_trace_json(trace_id)
+
+
+@mcp.tool(description="Return log lines correlated with trace_id")
+async def trace_logs_tool(trace_id: str, limit: int = 100) -> list[str]:  # type: ignore[override]
+    return await _fetch_trace_logs(trace_id, limit)
 
 
 if __name__ == "__main__":  # pragma: no cover

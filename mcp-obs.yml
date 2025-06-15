@@ -91,6 +91,9 @@ services:
       - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+      # Mount provisioning configuration and dashboards JSON from repo
+      - ./grafana/provisioning:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - loki
       - prometheus
