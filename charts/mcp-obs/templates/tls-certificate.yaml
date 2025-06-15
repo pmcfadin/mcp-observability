@@ -1,0 +1,18 @@
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.tls.secretName }}
+  labels:
+    {{- include "mcp-obs.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.tls.secretName }}
+  duration: 90d
+  renewBefore: 30d
+  issuerRef:
+    name: {{ .Values.tls.issuer.name }}
+    kind: {{ .Values.tls.issuer.kind }}
+  dnsNames:
+    - "{{ include "mcp-obs.fullname" . }}-server"
+    - "{{ include "mcp-obs.fullname" . }}-server.{{ .Release.Namespace }}.svc"
+{{- end }} 
