@@ -1,0 +1,26 @@
+name: compose-vs-helm-drift
+
+on:
+  pull_request:
+    paths:
+      - "mcp-obs.yml"
+      - "charts/**"
+      - "scripts/ci/check_drift.py"
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies (PyYAML)
+        run: pip install PyYAML
+
+      - name: Run drift check
+        run: python scripts/ci/check_drift.py 
