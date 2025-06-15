@@ -1,3 +1,8 @@
+
+## Documentation
+
+* [Grafana Dashboards](docs/dashboards.md) – screenshots and description of bundled dashboards. 
+=======
 # MCP Observability FastAPI Service
 
 This service exposes health, log, and metric endpoints that will be consumed by the MCP Observability platform.
