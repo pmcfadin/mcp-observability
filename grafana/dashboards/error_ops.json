@@ -1,0 +1,68 @@
+{
+  "uid": "error-ops",
+  "title": "ErrorOps Overview",
+  "description": "Quick view for errors, latency and trace correlation across the stack.",
+  "schemaVersion": 37,
+  "version": 1,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "logs",
+      "title": "Recent Errors (Loki)",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{level=\"error\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Error Rate (req/s)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_errors_total[5m]))",
+          "legendFormat": "errors/s",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 8 }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "P95 Latency (ms)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le)(rate(request_latency_seconds_bucket[5m])))*1000",
+          "legendFormat": "p95 latency",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 8 }
+    },
+    {
+      "id": 4,
+      "type": "traces",
+      "title": "Error Traces (Tempo)",
+      "datasource": "Tempo",
+      "targets": [
+        {
+          "query": "status_code=error",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 }
+    }
+  ]
+} 
