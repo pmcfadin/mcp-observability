@@ -17,6 +17,12 @@ poetry run python -m app.main
 
 Then visit `http://localhost:8000/health` to verify the service is running.
 
+## Exposed Endpoints (MVP)
+
+| Path | Method | Description |
+|------|--------|-------------|
+| `/health` | GET | Returns `{"status": "ok"}` when the service is healthy. |
+
 ## Tests
 
 ```bash

@@ -1,0 +1,10 @@
+{{- if and .Values.tls.enabled .Values.tls.issuer.create }}
+apiVersion: cert-manager.io/v1
+kind: {{ .Values.tls.issuer.kind }}
+metadata:
+  name: {{ .Values.tls.issuer.name }}
+  labels:
+    {{- include "mcp-obs.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+{{- end }} 

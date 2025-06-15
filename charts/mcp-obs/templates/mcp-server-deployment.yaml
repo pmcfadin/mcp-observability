@@ -23,6 +23,23 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+          {{- if .Values.tls.enabled }}
+          volumeMounts:
+            - name: tls
+              mountPath: /certs
+              readOnly: true
+          args:
+            - "uvicorn"
+            - "app.main:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8000"
+            - "--ssl-keyfile"
+            - "/certs/tls.key"
+            - "--ssl-certfile"
+            - "/certs/tls.crt"
+          {{- end }}
           env:
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://{{ include "mcp-obs.fullname" . }}-otel-collector:4318"
@@ -38,9 +55,14 @@ spec:
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
-      {{- if .Values.mcpServer.persistence.enabled }}
       volumes:
+        {{- if .Values.mcpServer.persistence.enabled }}
         - name: mcp-storage
           persistentVolumeClaim:
             claimName: {{ include "mcp-obs.fullname" . }}-server-pvc
-      {{- end }} 
+        {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.secretName }}
+        {{- end }} 

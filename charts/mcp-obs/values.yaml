@@ -48,4 +48,13 @@ otelCollector:
   mode: deployment
   presets:
     kubernetesAttributes: true
-    kubernetesClusterReceiver: true 
+    kubernetesClusterReceiver: true
+
+# TLS / cert-manager settings for mcp-server
+tls:
+  enabled: true            # When true, chart provisions Certificate & Issuer and mounts secret
+  secretName: mcp-server-tls
+  issuer:
+    create: true           # Create a self-signed Issuer when true
+    name: mcp-selfsigned-issuer
+    kind: Issuer           # "Issuer" or "ClusterIssuer" 
