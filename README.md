@@ -23,6 +23,7 @@ Then visit `http://localhost:8000/health` to verify the service is running.
 |------|--------|-------------|
 | `/health` | GET | Returns `{"status": "ok"}` when the service is healthy. |
 | `/logs/errors` | GET | Fetches the last N error log lines from Loki (`limit` query param, default 100). |
+| `/metrics/latency` | GET | Returns latency percentile from Prometheus (`percentile`, `window` query params). |
 
 ## Tests
 

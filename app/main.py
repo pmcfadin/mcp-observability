@@ -91,6 +91,81 @@ async def logs_errors(limit: int = Query(100, ge=1, le=1000)) -> dict[str, list[
     return {"logs": logs}
 
 
+# --- Metrics ---------------------------------------------------------------
+
+PROMETHEUS_BASE_URL: str = os.getenv("PROMETHEUS_BASE_URL", "http://prometheus:9090")
+
+
+async def _fetch_latency_percentile(percentile: float, window: str) -> float:
+    """Query Prometheus for latency percentile over the given window.
+
+    Uses the `histogram_quantile` function on the `http_server_request_duration_seconds_bucket` metric.
+    Returns the latency in seconds as a float.
+    """
+
+    promql = (
+        f"histogram_quantile({percentile}, "
+        f"sum(rate(http_server_request_duration_seconds_bucket[{window}])) by (le))"
+    )
+
+    url = f"{PROMETHEUS_BASE_URL.rstrip('/')}/api/v1/query"
+    params = {"query": promql}
+
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        try:
+            response = await client.get(url, params=params)
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Failed to contact Prometheus: {exc}",
+            ) from exc
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Prometheus returned {response.status_code}",
+        )
+
+    data: Any = response.json()
+    try:
+        result = data["data"]["result"][0]["value"][1]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unexpected Prometheus response format",
+        ) from exc
+
+    try:
+        return float(result)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Prometheus returned non-numeric value",
+        ) from exc
+
+
+@app.get(
+    "/metrics/latency",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_bearer_token)],
+)
+async def metrics_latency(
+    percentile: float = Query(0.95, gt=0.0, lt=1.0),
+    window: str = Query("5m", pattern=r"^\d+[smhd]$"),
+) -> dict[str, float | str]:
+    """Return latency percentile over window from Prometheus.
+
+    Example: `/metrics/latency?percentile=0.99&window=1m`
+    """
+
+    latency = await _fetch_latency_percentile(percentile, window)
+    return {
+        "percentile": percentile,
+        "window": window,
+        "latency_seconds": latency,
+    }
+
+
 def run() -> None:  # pragma: no cover
     """Run the application using uvicorn when executed as a module."""
     import uvicorn
