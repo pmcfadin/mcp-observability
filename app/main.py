@@ -1,9 +1,15 @@
-from fastapi import FastAPI, status
+from fastapi import Depends, FastAPI, status
+
+from app.security import verify_bearer_token
 
 app = FastAPI(title="MCP Observability API")
 
 
-@app.get("/health", status_code=status.HTTP_200_OK)
+@app.get(
+    "/health",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_bearer_token)],
+)
 async def health() -> dict[str, str]:
     """Simple health check endpoint."""
     return {"status": "ok"}
