@@ -1,8 +1,3 @@
-
-## Documentation
-
-* [Grafana Dashboards](docs/dashboards.md) – screenshots and description of bundled dashboards. 
-=======
 # MCP Observability FastAPI Service
 
 This service exposes health, log, and metric endpoints that will be consumed by the MCP Observability platform.
@@ -58,7 +53,7 @@ docker compose -f mcp-obs.yml up -d
 
 Services started:
 * `mcp-server` – FastAPI application (port 8000)
-* `grafana` – Dashboards UI (port 3000, default admin \`admin/admin\`)
+* `grafana` – Dashboards UI (port 3000, default admin `admin/admin`)
 * `prometheus` – Metrics (port 9090)
 * `loki` – Logs (port 3100)
 * `tempo` – Traces (port 3200)
@@ -127,7 +122,7 @@ Then add the server in clients such as Claude Desktop or the MCP Inspector:
   }
 }
 ```
-=======
+
 ## Authentication & TLS
 
 All MCP Server endpoints are protected by **Bearer-token** authentication and, by default, served over **HTTPS**.
@@ -197,3 +192,6 @@ curl --cert client.crt --key client.key \
 
 *Replace `certs/` paths with the mounted location inside your dev environment.*
 
+## Documentation
+
+* [Grafana Dashboards](docs/dashboards.md) – screenshots and description of bundled dashboards. 
