@@ -3,8 +3,8 @@ name: mcp-obs
 description: "Observability stack – MCP server plus Grafana, Loki, Prometheus, Tempo, and OpenTelemetry Collector"
 
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 0.2.0
+appVersion: "0.2.0"
 
 # Umbrella chart: leverage upstream community charts
 
