@@ -192,4 +192,49 @@ class SamplingResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+        extra = "forbid"
+
+
+# ---------------------------------------------------------------------------
+# Initialize Handshake (Lifecycle)
+# ---------------------------------------------------------------------------
+
+class ClientInfo(BaseModel):
+    name: str
+    version: Optional[str] = None
+    informationUri: Optional[str] = None
+
+
+class ServerInfo(BaseModel):
+    name: str
+    version: str
+    informationUri: Optional[str] = None
+
+
+class Capabilities(BaseModel):
+    """Subset of MCP capabilities we expose.
+
+    For now we only advertise resources, prompts, tools, and sampling availability.
+    Additional nested capability fields can be added later if/when implemented.
+    """
+
+    resources: bool = False
+    prompts: bool = False
+    tools: bool = False
+    sampling: bool = False
+
+
+class InitializeRequest(BaseModel):
+    version: str = Field(..., description="MCP protocol version requested by the client")
+    client: ClientInfo
+    capabilities: Optional[Capabilities] = None
+
+
+class InitializeResponse(BaseModel):
+    version: str = Field(..., description="Protocol version selected by the server")
+    server: ServerInfo
+    capabilities: Capabilities
+
+    class Config:
+        populate_by_name = True
         extra = "forbid" 
