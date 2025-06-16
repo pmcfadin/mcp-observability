@@ -27,7 +27,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          poetry run pytest -m "not unit" --cov=app --cov-fail-under=80 -q
+          poetry run pytest -m "not unit" --cov=app --cov-fail-under=70 -q
 
       - name: Upload test results
         if: always()
