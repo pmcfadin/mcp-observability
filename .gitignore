@@ -171,3 +171,6 @@ __pypackages__/
 .pdm.toml
 .pdm-python
 .pdm-build/
+
+# Anaconda Navigator project metadata
+anaconda_projects/
