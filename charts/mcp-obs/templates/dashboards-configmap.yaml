@@ -1,0 +1,12 @@
+{{- if and .Values.dashboards.enabled .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mcp-obs.fullname" . }}-dashboards
+  labels:
+    {{- include "mcp-obs.labels" . | nindent 4 }}
+    {{ .Values.dashboards.label }}: "1"
+data:
+  error_ops.json: |
+{{ (.Files.Get "grafana/dashboards/error_ops.json") | indent 4 }}
+{{- end }} 
