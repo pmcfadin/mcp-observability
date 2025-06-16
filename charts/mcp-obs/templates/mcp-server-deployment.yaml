@@ -43,6 +43,13 @@ spec:
           env:
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://{{ include "mcp-obs.fullname" . }}-otel-collector:4318"
+            {{- if .Values.mcpServer.env.MCP_TOKEN }}
+            - name: MCP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mcp-obs.fullname" . }}-mcp-token
+                  key: token
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /health

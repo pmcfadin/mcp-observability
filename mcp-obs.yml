@@ -12,6 +12,7 @@ services:
     environment:
       # Point the OpenTelemetry SDK to the collector
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - MCP_TOKEN=${MCP_TOKEN:-changeme}
     volumes:
       - certs:/certs:ro
     command:

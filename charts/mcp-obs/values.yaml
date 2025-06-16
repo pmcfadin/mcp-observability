@@ -16,6 +16,9 @@ mcpServer:
   persistence:
     enabled: false
     size: 1Gi
+  # Environment variables injected into the container
+  env:
+    MCP_TOKEN: ""
 
 # Upstream charts enablement flags – default all true
 loki:
