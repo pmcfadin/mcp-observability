@@ -63,6 +63,18 @@ class Resource(BaseModel):
         extra = "forbid"
 
 
+# Pagination envelope --------------------------------------------------------
+
+
+class ResourcePage(BaseModel):
+    resources: list["Resource"]
+    next_cursor: int | None = Field(None, alias="nextCursor")
+
+    class Config:
+        populate_by_name = True
+        extra = "forbid"
+
+
 # ---------------------------------------------------------------------------
 # Prompts
 # ---------------------------------------------------------------------------

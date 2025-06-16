@@ -1,42 +1,65 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, status
-from pathlib import Path
+import asyncio
+from typing import List
 
-from mcp_observability.schemas import Resource, ResourceType
+from fastapi import APIRouter, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
+
+from mcp_observability.schemas import Resource, ResourcePage
+
+from app.resource_store import get_resource, list_resources
 
 router = APIRouter(tags=["mcp"])
 
-# Example in-memory resources; in a real deployment this could be backed by a
-# database or fetched dynamically from connected systems.  IDs should be
-# unique within the server scope.
-_readme_path = Path(__file__).resolve().parent.parent / "README.md"
-try:
-    _readme_text = _readme_path.read_text(encoding="utf-8")
-except FileNotFoundError:
-    _readme_text = ""
 
-RESOURCES: list[Resource] = [
-    Resource(
-        id="readme",
-        type=ResourceType.text,
-        name="Project README",
-        description="Top-level project documentation",
-        content=_readme_text,
-        metadata={"path": str(_readme_path)},
-    )
-]
+@router.get(
+    "/resources",
+    response_model=ResourcePage,
+    status_code=status.HTTP_200_OK,
+)
+async def resources_list(
+    limit: int = Query(20, ge=1, le=100),
+    cursor: int = Query(0, ge=0),
+) -> ResourcePage:
+    """List resources with offset/limit pagination.
 
-
-@router.get("/resources", response_model=list[Resource], status_code=status.HTTP_200_OK)
-async def list_resources() -> list[Resource]:
-    """Return metadata for all available Resources.
-
-    The endpoint intentionally *does not* return the resource *content* unless
-    it is embedded in the model (e.g. small text).  Large or binary content
-    SHOULD be provided via an external `content` reference (URL or file path)
-    or through a dedicated download endpoint.  For this MVP we only expose the
-    meta layer.
+    * `cursor` is a zero-based offset into the full resource list.
+    * `limit` caps the number of items returned.
+    * The response includes `nextCursor` when further pages exist.
     """
 
-    return RESOURCES 
+    all_res = list_resources()
+    page_items: List[Resource] = all_res[cursor : cursor + limit]
+    next_cursor = cursor + limit if cursor + limit < len(all_res) else None
+    return ResourcePage(resources=page_items, nextCursor=next_cursor)  # type: ignore[arg-type]
+
+
+@router.get(
+    "/resources/{resource_id}",
+    response_model=Resource,
+    status_code=status.HTTP_200_OK,
+)
+async def resource_read(resource_id: str) -> Resource:
+    res = get_resource(resource_id)
+    if res is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    return res
+
+
+@router.get("/resources/subscribe")
+async def resources_subscribe():
+    """Very simple Server-Sent Events stream for resource change notifications.
+
+    This MVP sends a periodic ping every 15 s.  In a future iteration the
+    store can publish events when resources are added/updated.
+    """
+
+    async def event_generator():
+        while True:
+            # Comment lines are ignored by EventSource clients but keep the
+            # connection alive across proxies.
+            yield "\n"
+            await asyncio.sleep(15)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream") 
