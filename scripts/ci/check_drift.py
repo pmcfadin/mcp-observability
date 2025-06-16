@@ -26,6 +26,8 @@ compose_services: set[str] = set()
 with COMPOSE_PATH.open() as f:
     compose_yaml = yaml.safe_load(f)
     compose_services = set(compose_yaml.get("services", {}).keys())
+    # Exclude compose-only helper service (cert-manager handles this in Helm)
+    compose_services.discard("mcp-certgen")
 
 helm_components: set[str] = set()
 with CHART_PATH.open() as f:
