@@ -18,8 +18,12 @@ RUN pip install --upgrade pip \
 # Copy application code
 COPY app app
 
+# Copy runtime entrypoint
+COPY scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expose server port
 EXPOSE 8000
 
-# Default command – uvicorn with 2 workers; can be overridden
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Default command relies on entrypoint script which handles TLS flags
+ENTRYPOINT ["/entrypoint.sh"] 
