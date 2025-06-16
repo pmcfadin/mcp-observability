@@ -8,6 +8,8 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    env:
+      MCP_TOKEN: testtoken
     steps:
       - uses: actions/checkout@v4
 
