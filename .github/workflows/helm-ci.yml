@@ -1,0 +1,35 @@
+name: Helm chart CI
+
+on:
+  push:
+    paths:
+      - 'charts/mcp-obs/**'
+      - '.github/workflows/helm-ci.yml'
+  pull_request:
+    paths:
+      - 'charts/mcp-obs/**'
+      - '.github/workflows/helm-ci.yml'
+
+jobs:
+  lint-and-kubeval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.1
+
+      - name: Run helm lint
+        run: helm lint charts/mcp-obs --strict
+
+      - name: Install kubeval
+        run: |
+          curl -sSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | tar xz
+          sudo mv kubeval /usr/local/bin/
+
+      - name: Template chart and validate manifests
+        run: |
+          helm template mcp charts/mcp-obs | kubeval --strict --ignore-missing-schemas 
