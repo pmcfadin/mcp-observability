@@ -7,9 +7,11 @@ app = FastAPI(title="MCP Observability API")
 # Include MCP feature routers (Resources, Prompts, Sampling, ...)
 from app.resources import router as resources_router  # noqa: E402  (circular import tolerated at runtime)
 from app.prompts import router as prompts_router  # noqa: E402
+from app.sampling import router as sampling_router  # noqa: E402
 
 app.include_router(resources_router)
 app.include_router(prompts_router)
+app.include_router(sampling_router)
 
 
 @app.get(
