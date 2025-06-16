@@ -1,29 +1,34 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, status
+from typing import Dict, List
+
+from fastapi import APIRouter, HTTPException, status
 
 from mcp_observability.schemas import Prompt
 
+from app.prompt_store import get_prompt, list_prompts, render_prompt
+
 router = APIRouter(tags=["mcp"])
 
-PROMPTS: list[Prompt] = [
-    Prompt(
-        id="greet",
-        template="Hello, {{name}}!",
-        inputVariables=["name"],
-        metadata={"category": "examples"},
-    ),
-    Prompt(
-        id="troubleshoot_latency",
-        template="Service {{service}} has high latency in the last {{window}}. Return top 3 suspected causes and a mitigation plan.",
-        inputVariables=["service", "window"],
-        metadata={"category": "troubleshooting"},
-    ),
-]
+
+@router.get("/prompts", response_model=List[Prompt], status_code=status.HTTP_200_OK)
+async def prompts_list() -> List[Prompt]:
+    return list_prompts()
 
 
-@router.get("/prompts", response_model=list[Prompt], status_code=status.HTTP_200_OK)
-async def list_prompts() -> list[Prompt]:
-    """Return available templated prompts."""
+class RenderRequest(Dict[str, str]):  # type: ignore[misc]
+    """Ad-hoc request body model: dict of variable -> value."""
 
-    return PROMPTS 
+
+@router.post("/prompts/{prompt_id}/render", status_code=status.HTTP_200_OK)
+async def prompt_render(prompt_id: str, args: Dict[str, str]) -> Dict[str, str]:
+    prompt = get_prompt(prompt_id)
+    if prompt is None:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+
+    try:
+        rendered = render_prompt(prompt, args)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return {"prompt": rendered} 
