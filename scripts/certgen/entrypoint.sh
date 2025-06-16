@@ -29,6 +29,32 @@ openssl x509 -req -in "$SERVER_CSR" -CA "$CA_CERT" -CAkey "$CA_KEY" \
 
 rm -f "$SERVER_CSR" "$CERT_DIR/ca.srl" 2>/dev/null || true
 
+# ---------------------------------------------------------------------------
+# Optionally generate a client certificate so that external clients (tests,
+# curl, etc.) can establish mutual-TLS connections when the server enforces
+# client authentication. The client certificate is signed by the same CA and
+# written next to the other certs.
+# ---------------------------------------------------------------------------
+
+CLIENT_KEY="$CERT_DIR/client.key"
+CLIENT_CSR="$CERT_DIR/client.csr"
+CLIENT_CERT="$CERT_DIR/client.crt"
+
+# Generate client certificate only if it does not already exist (to avoid
+# regenerating on every container restart which would break previously issued
+# certs copied out by devs).
+if [ ! -f "$CLIENT_KEY" ] || [ ! -f "$CLIENT_CERT" ]; then
+    echo "[*] Generating client certificate signed by CA"
+    openssl req -new -nodes -newkey rsa:2048 \
+        -subj "/CN=mcp-client" \
+        -keyout "$CLIENT_KEY" -out "$CLIENT_CSR"
+
+    openssl x509 -req -in "$CLIENT_CSR" -CA "$CA_CERT" -CAkey "$CA_KEY" \
+        -CAcreateserial -out "$CLIENT_CERT" -days 90
+
+    rm -f "$CLIENT_CSR" 2>/dev/null || true
+fi
+
 ls -l "$CERT_DIR"
 
 echo "[*] Certificate generation complete. Sleeping to keep sidecar alive."

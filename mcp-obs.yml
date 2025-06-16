@@ -28,6 +28,8 @@ services:
       - /certs/server.key
       - --ssl-certfile
       - /certs/server.crt
+      - --ssl-ca-certs
+      - /certs/ca.crt
     depends_on:
       - mcp-certgen
       - otel-collector
