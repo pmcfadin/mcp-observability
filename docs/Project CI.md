@@ -11,7 +11,7 @@
 | `.github/workflows/ci.yml` | `push` to `main`, `pull_request` | Lints, formats, runs `mypy`, executes unit tests with coverage. Uploads coverage artifact. |
 | `.github/workflows/docker-build.yml` | `push` to `main` (Docker-related paths) | Builds and publishes the MCP Server Docker image to GHCR. |
 | `.github/workflows/helm-package.yml` | `push` to `main` (chart paths) | Packages the Helm chart and uploads it as an artifact. |
-| `.github/workflows/integration-test.yml` | `workflow_dispatch` | Runs the slower integration-test suite on demand. |
+| `.github/workflows/integration-test.yml` | `workflow_dispatch` | Executes end-to-end integration tests with minimum 69 % coverage; manual trigger only. |
 
 ---
 
@@ -48,6 +48,17 @@ flowchart TD
    ```
 
 4. **Badges** (coming soon) — we'll surface overall `main` build status in the README.
+
+---
+
+## Coverage Thresholds
+
+| Workflow | Minimum Coverage |
+| -------- | ---------------- |
+| `ci.yml` (unit tests) | 90 % |
+| `integration-test.yml` | 69 % |
+
+Failing to meet the threshold will mark the job as failed and block the pipeline until coverage is restored.
 
 ---
 
