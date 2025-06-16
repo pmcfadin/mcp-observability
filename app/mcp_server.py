@@ -70,5 +70,15 @@ async def metrics_query(query: str) -> Any:  # type: ignore[override]
     return await _execute_promql(query)
 
 
+# Alerts tool --------------------------------------------------------------
+
+
+@mcp.tool(description="Return active alerts from Alertmanager filtered by severity/service")
+async def alerts_tool(severity: str | None = None, service: str | None = None) -> list[dict[str, Any]]:  # type: ignore[override]
+    from app.main import _fetch_active_alerts
+
+    return await _fetch_active_alerts(severity, service)
+
+
 if __name__ == "__main__":  # pragma: no cover
     mcp.run()
