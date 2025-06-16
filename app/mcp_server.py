@@ -15,31 +15,39 @@ async def health() -> str:  # type: ignore[override]
     return "ok"
 
 
-@mcp.tool(description="Fetch last N error log lines from Loki")
-async def error_logs(limit: int = 100) -> List[str]:  # type: ignore[override]
+@mcp.tool(description="Fetch last N error log lines from Loki (optional service & range)")
+async def error_logs(
+    limit: int = 100,
+    service: str | None = None,
+    range: str | None = None,
+) -> List[str]:  # type: ignore[override]
     """Return the last *limit* error log lines from Loki.
 
     Args:
         limit: Number of lines to return (1-1000).
+        service: Optional service filter.
+        range: Optional time range filter.
     """
 
     # Clamp limit to allowed bounds in helper
-    return await _fetch_error_logs(limit)
+    return await _fetch_error_logs(limit, service, range)
 
 
 @mcp.tool(description="Query Prometheus latency percentile over window")
 async def latency_percentile(
     percentile: float = 0.95,
     window: str = "5m",
+    service: str | None = None,
 ) -> float:  # type: ignore[override]
     """Return latency percentile from Prometheus.
 
     Args:
         percentile: Target percentile (0<percentile<1).
         window: Prometheus range vector duration (e.g. 1m, 5m, 1h).
+        service: Optional service filter.
     """
 
-    return await _fetch_latency_percentile(percentile, window)
+    return await _fetch_latency_percentile(percentile, window, service)
 
 
 @mcp.tool(description="Return raw trace JSON for given trace_id")

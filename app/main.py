@@ -25,18 +25,29 @@ import httpx
 LOKI_BASE_URL: str = os.getenv("LOKI_BASE_URL", "http://loki:3100")
 
 
-async def _fetch_error_logs(limit: int) -> List[str]:
-    """Fetch the last *limit* error log lines from Loki.
+async def _fetch_error_logs(limit: int, service: str | None = None, time_range: str | None = None) -> List[str]:
+    """Fetch recent error log lines from Loki.
 
-    The function performs a GET request to Loki's *instant* query API using a
-    label matcher that filters for logs with level="error". Only the log line
-    strings are returned, newest first.
+    Args:
+        limit: Maximum number of lines to return.
+        service: Optional service label to filter on.
+        time_range: Optional LogQL range selector (e.g., 1h, 24h). When
+            provided, the query restricts the time window using a range
+            vector. Loki instant queries support the syntax
+            `{selector}[range]`.
     """
 
-    # Loki instant query endpoint; we rely on the default tenant and time=now.
+    selector = '{level="error"}'
+    if service:
+        selector = f'{{level="error",service="{service}"}}'
+
+    query_str = selector
+    if time_range:
+        query_str = f'{selector}[{time_range}]'
+
     url = f"{LOKI_BASE_URL.rstrip('/')}/loki/api/v1/query"
     params = {
-        "query": '{level="error"}',  # simple filter; adjust if needed
+        "query": query_str,
         "limit": str(limit),
     }
 
@@ -79,14 +90,18 @@ async def _fetch_error_logs(limit: int) -> List[str]:
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(verify_bearer_token)],
 )
-async def logs_errors(limit: int = Query(100, ge=1, le=1000)) -> dict[str, list[str]]:
+async def logs_errors(
+    limit: int = Query(100, ge=1, le=1000),
+    service: str | None = Query(None, pattern=r"^[a-zA-Z0-9_-]+$"),
+    range: str | None = Query(None, pattern=r"^\d+[smhd]$"),
+) -> dict[str, list[str]]:
     """Return the last *limit* error log lines from Loki.
 
     The endpoint proxies a query to the Loki HTTP API, returning only the raw
     log lines so that API consumers do not need to know Loki's schema.
     """
 
-    logs = await _fetch_error_logs(limit)
+    logs = await _fetch_error_logs(limit, service, range)
     return {"logs": logs}
 
 
@@ -166,16 +181,21 @@ async def logs_search(request: LogSearchRequest) -> dict[str, list[str]]:
 PROMETHEUS_BASE_URL: str = os.getenv("PROMETHEUS_BASE_URL", "http://prometheus:9090")
 
 
-async def _fetch_latency_percentile(percentile: float, window: str) -> float:
+async def _fetch_latency_percentile(percentile: float, window: str, service: str | None = None) -> float:
     """Query Prometheus for latency percentile over the given window.
 
     Uses the `histogram_quantile` function on the `http_server_request_duration_seconds_bucket` metric.
     Returns the latency in seconds as a float.
     """
 
+    # Build PromQL, optionally scoping to service label
+    metric = "http_server_request_duration_seconds_bucket"
+    if service:
+        metric = f'{metric}{{service="{service}"}}'
+
     promql = (
         f"histogram_quantile({percentile}, "
-        f"sum(rate(http_server_request_duration_seconds_bucket[{window}])) by (le))"
+        f"sum(rate({metric}[{window}])) by (le))"
     )
 
     url = f"{PROMETHEUS_BASE_URL.rstrip('/')}/api/v1/query"
@@ -222,17 +242,19 @@ async def _fetch_latency_percentile(percentile: float, window: str) -> float:
 async def metrics_latency(
     percentile: float = Query(0.95, gt=0.0, lt=1.0),
     window: str = Query("5m", pattern=r"^\d+[smhd]$"),
+    service: str | None = Query(None, pattern=r"^[a-zA-Z0-9_-]+$"),
 ) -> dict[str, float | str]:
     """Return latency percentile over window from Prometheus.
 
     Example: `/metrics/latency?percentile=0.99&window=1m`
     """
 
-    latency = await _fetch_latency_percentile(percentile, window)
+    latency = await _fetch_latency_percentile(percentile, window, service)
     return {
         "percentile": percentile,
         "window": window,
         "latency_seconds": latency,
+        **({"service": service} if service else {}),
     }
 
 
