@@ -332,6 +332,61 @@ async def trace_logs(
     return {"logs": logs}
 
 
+# --- Metrics Query ---------------------------------------------------------
+
+from pydantic import BaseModel as _PydanticBaseModel
+
+
+class PrometheusQueryRequest(_PydanticBaseModel):
+    query: str
+
+
+async def _execute_promql(promql: str) -> Any:
+    """Execute an arbitrary PromQL query against Prometheus instant query API.
+
+    Returns the raw `data.result` portion of the response JSON (list).
+    """
+
+    url = f"{PROMETHEUS_BASE_URL.rstrip('/')}/api/v1/query"
+    params = {"query": promql}
+
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        try:
+            response = await client.get(url, params=params)
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Failed to contact Prometheus: {exc}",
+            ) from exc
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Prometheus returned {response.status_code}",
+        )
+
+    data: Any = response.json()
+    try:
+        return data["data"]["result"]
+    except (KeyError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unexpected Prometheus response format",
+        ) from exc
+
+
+@app.post(
+    "/metrics/query",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_bearer_token)],
+)
+async def metrics_query(request: PrometheusQueryRequest) -> dict[str, Any]:
+    """Execute an arbitrary PromQL instant query and return the raw result list."""
+
+    result = await _execute_promql(request.query)
+    return {"result": result}
+
+
 def run() -> None:  # pragma: no cover
     """Run the application using uvicorn when executed as a module."""
     import uvicorn

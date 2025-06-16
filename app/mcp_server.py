@@ -60,5 +60,15 @@ async def logs_search_tool(query: str, service: str | None = None, range: str | 
     return await _search_logs(query, service, range)
 
 
+# Metrics query tool --------------------------------------------------------
+
+
+@mcp.tool(description="Execute PromQL query and return raw result list")
+async def metrics_query(query: str) -> Any:  # type: ignore[override]
+    from app.main import _execute_promql
+
+    return await _execute_promql(query)
+
+
 if __name__ == "__main__":  # pragma: no cover
     mcp.run()
