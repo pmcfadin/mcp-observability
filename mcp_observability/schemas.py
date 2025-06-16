@@ -249,4 +249,21 @@ class InitializeResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+        extra = "forbid"
+
+
+# ---------------------------------------------------------------------------
+# Manifest
+# ---------------------------------------------------------------------------
+
+
+class Manifest(BaseModel):
+    version: str
+    capabilities: Capabilities
+    resources: list[str]
+    prompts: list[str]
+    tools: list[str] | None = None
+
+    class Config:
+        populate_by_name = True
         extra = "forbid" 
