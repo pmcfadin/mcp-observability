@@ -9,7 +9,7 @@
 1. Always work **inside a tracked GitHub Issue**.
 2. Keep the open‐issue rate ≤ 5 per hour (see Cursor rule §6).
 3. Follow the *Create-Before-Code* policy – no code without an issue.
-4. Ensure transparent progress logging through comments, commits, and PRs.
+4. Ensure transparent progress logging through comments and commits on `main`.
 
 ---
 
@@ -17,7 +17,7 @@
 
 * GitHub CLI (`gh`) authenticated and in the repo root.
 * `git` configured with an email/username the team recognises.
-* Branch protection passes (CI green) before merging.
+* CI passes automatically on every push to `main`.
 
 ---
 
@@ -30,12 +30,11 @@ flowchart TD
   C -->|None| D(Create child issue from checklist)
   C -->|Some open| E(Pick a child issue)
   D --> E
-  E --> F(Comment "⏳ Started" & create branch)
-  F --> G(Implement work, commit, push)
-  G --> H(Open PR referencing child issue)
-  H --> I(Tests pass & code review)
-  I --> J(Close child issue & comment on epic)
-  J --> K(If all child issues closed → close epic)
+  E --> F(Comment "⏳ Started")
+  F --> G(Implement work, commit, push to main)
+  G --> H(CI passes)
+  H --> I(Close child issue & comment on epic)
+  I --> J(If all child issues closed → close epic)
 ```
 
 ---
@@ -86,11 +85,7 @@ gh issue comment $EPIC_ID "Tracks #$NEW_ID" | cat
 
 ```bash
 CHILD_ID=42  # issue you picked
-SLUG=$(echo "$(gh issue view $CHILD_ID --json title -q .title)" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-')
-BRANCH="ai/$CHILD_ID-$SLUG"
-
-gh issue comment $CHILD_ID "⏳ Started. Branch: $BRANCH" | cat
-git checkout -b $BRANCH
+gh issue comment $CHILD_ID "⏳ Started." | cat
 ```
 
 ---
@@ -102,30 +97,17 @@ git checkout -b $BRANCH
 git add .
 git commit -m "feat: Add health endpoint (refs #$CHILD_ID)"
 
-git push -u origin $BRANCH
+git push origin main
 ```
 
 ---
 
-### 4.6  Open a PR
+### 4.6  Close the loop
 
 ```bash
-gh pr create \
-  --title "Close #$CHILD_ID: Add health endpoint" \
-  --body "AI-generated implementation." \
-  --head $BRANCH | cat
-```
+COMMIT_HASH=$(git rev-parse --short HEAD)
 
-CI will run automatically. If it fails, push fixes until green.
-
----
-
-### 4.7  Close the loop
-
-```bash
-PR_ID=$(gh pr view --json number -q .number)
-
-gh issue close $CHILD_ID --comment "✅ Done. See PR #$PR_ID." | cat
+gh issue close $CHILD_ID --comment "✅ Done in $COMMIT_HASH." | cat
 ```
 
 Then update the epic:
@@ -135,7 +117,7 @@ gh issue comment $EPIC_ID "✅ Completed sub-task #$CHILD_ID" | cat
 
 # If no unchecked tasks remain, close epic
 if ! gh issue view $EPIC_ID --json taskLists -q '.taskLists[].items[] | select(.state=="OPEN")' | grep -q .; then
-  gh issue close $EPIC_ID --comment "✅ Done. See merged PRs." | cat
+  gh issue close $EPIC_ID --comment "✅ Done. See commits on main." | cat
 fi
 ```
 
@@ -148,7 +130,7 @@ fi
 | **≤ 5 issues/hour** | Batch child issues – don't spam. |
 | **Logs** | Use emojis: ⏳ Started, 🚧 Progress, ❗ Need input, ✅ Done. |
 | **Secrets** | Never paste tokens or credentials. |
-| **Branch name** | `ai/<issue-id>-<slug>` only. |
+| **Commits** | Push small, self-contained commits directly to `main`. |
 
 ---
 
@@ -160,4 +142,4 @@ fi
 
 ---
 
-*Last updated: 15 Jun 2025* 
+*Last updated: 16 Jun 2025* 
