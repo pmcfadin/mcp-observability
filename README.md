@@ -59,6 +59,25 @@ Services started:
 * `tempo` – Traces (port 3200)
 * `otel-collector` – OpenTelemetry entry point (ports 4317/4318)
 
+#### Accessing Grafana Dashboards
+
+Once Compose is up you can explore the pre-bundled dashboards:
+
+```text
+URL:    http://localhost:3000
+User:   admin
+Pass:   ${GF_ADMIN_PASSWORD:-admin}
+```
+
+Dashboards are automatically provisioned into the **General** folder. After logging in, navigate to *Dashboards ▸ Browse* to view latency, error rate, and trace overview panels.
+
+Tip: set `GF_ADMIN_PASSWORD` before running `docker compose` to override the default admin password:
+
+```bash
+export GF_ADMIN_PASSWORD="supersecret"
+docker compose -f mcp-obs.yml up -d
+```
+
 The default Compose file uses **ephemeral named volumes**. Data vanishes on `down -v`. If you need persistence, map the volumes to host paths or use the Helm chart below.
 
 ### Kubernetes (Helm)
