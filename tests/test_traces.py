@@ -1,7 +1,7 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
-from app.main import app, _fetch_trace_json, _fetch_trace_logs
+from app.main import _fetch_trace_json, _fetch_trace_logs, app
 
 
 class DummyResponse:
@@ -30,7 +30,9 @@ class DummyClient:
 @pytest.mark.asyncio
 async def test_fetch_trace_json(monkeypatch: pytest.MonkeyPatch):
     fake = {"data": {"traceID": "abc"}}
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake))
+    monkeypatch.setattr(
+        "app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake)
+    )
 
     result = await _fetch_trace_json("abc")
     assert result == fake
@@ -39,7 +41,9 @@ async def test_fetch_trace_json(monkeypatch: pytest.MonkeyPatch):
 @pytest.mark.asyncio
 async def test_fetch_trace_logs(monkeypatch: pytest.MonkeyPatch):
     fake = {"data": {"result": [{"values": [["1", "log1"], ["2", "log2"]]}]}}
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake))
+    monkeypatch.setattr(
+        "app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake)
+    )
 
     logs = await _fetch_trace_logs("abc", 10)
     assert logs == ["log1", "log2"]
@@ -53,8 +57,14 @@ async def test_trace_endpoints(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("MCP_TOKEN", "tok")
 
     # Patch helper functions instead of HTTP layer for simplicity
-    monkeypatch.setattr("app.main._fetch_trace_json", lambda trace_id: fake_trace)
-    monkeypatch.setattr("app.main._fetch_trace_logs", lambda trace_id, limit: ["l1"])
+    async def fake_json(trace_id):
+        return fake_trace
+
+    async def fake_logs(trace_id, limit):
+        return ["l1"]
+
+    monkeypatch.setattr("app.main._fetch_trace_json", fake_json)
+    monkeypatch.setattr("app.main._fetch_trace_logs", fake_logs)
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -64,4 +74,4 @@ async def test_trace_endpoints(monkeypatch: pytest.MonkeyPatch):
 
         logs = await ac.get("/traces/abc/logs", headers={"Authorization": "Bearer tok"})
         assert logs.status_code == 200
-        assert logs.json() == {"logs": ["l1"]} 
+        assert logs.json() == {"logs": ["l1"]}

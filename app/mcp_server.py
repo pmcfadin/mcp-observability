@@ -1,8 +1,9 @@
-from typing import List, Any
+from typing import Any, List
 
 from mcp.server.fastmcp import FastMCP
 
-from app.main import _fetch_error_logs, _fetch_latency_percentile, _fetch_trace_json, _fetch_trace_logs
+from app.main import (_fetch_error_logs, _fetch_latency_percentile,
+                      _fetch_trace_json, _fetch_trace_logs, _search_logs)
 
 mcp = FastMCP("mcp-observability-server")
 
@@ -51,5 +52,13 @@ async def trace_logs_tool(trace_id: str, limit: int = 100) -> list[str]:  # type
     return await _fetch_trace_logs(trace_id, limit)
 
 
+# Log search tool -----------------------------------------------------------
+
+
+@mcp.tool(description="Search logs by query and optional service")
+async def logs_search_tool(query: str, service: str | None = None, range: str | None = "1h") -> list[str]:  # type: ignore[override]
+    return await _search_logs(query, service, range)
+
+
 if __name__ == "__main__":  # pragma: no cover
-    mcp.run() 
+    mcp.run()

@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, status, Query, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 
 from app.security import verify_bearer_token
 
@@ -21,7 +21,6 @@ import os
 from typing import Any, List
 
 import httpx
-
 
 LOKI_BASE_URL: str = os.getenv("LOKI_BASE_URL", "http://loki:3100")
 
@@ -88,6 +87,77 @@ async def logs_errors(limit: int = Query(100, ge=1, le=1000)) -> dict[str, list[
     """
 
     logs = await _fetch_error_logs(limit)
+    return {"logs": logs}
+
+
+# --- Log Search ------------------------------------------------------------
+
+
+from pydantic import BaseModel
+
+
+class LogSearchRequest(BaseModel):
+    query: str
+    service: str | None = None
+    range: str | None = "1h"
+
+
+async def _search_logs(
+    query: str, service: str | None, time_range: str | None
+) -> list[str]:
+    """Search Loki logs for query within optional service and time range."""
+
+    selector = "{}"
+    if service:
+        selector = f'{{service="{service}"}}'
+
+    # Use simple LogQL contains match; callers can pass regex if needed
+    logql = f'{selector} |= "{query}"'
+
+    url = f"{LOKI_BASE_URL.rstrip('/')}/loki/api/v1/query"
+    params = {"query": logql, "limit": "1000"}
+
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        try:
+            response = await client.get(url, params=params)
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Failed to contact Loki: {exc}",
+            ) from exc
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Loki returned {response.status_code}",
+        )
+
+    data: Any = response.json()
+    try:
+        results = data["data"]["result"]
+    except (KeyError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unexpected Loki response format",
+        ) from exc
+
+    lines: list[str] = []
+    for stream in results:
+        for _ts, line in stream.get("values", []):
+            lines.append(line)
+
+    return lines
+
+
+@app.post(
+    "/logs/search",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_bearer_token)],
+)
+async def logs_search(request: LogSearchRequest) -> dict[str, list[str]]:
+    """Return log lines matching query (and optional service) from Loki."""
+
+    logs = await _search_logs(request.query, request.service, request.range)
     return {"logs": logs}
 
 
@@ -270,4 +340,4 @@ def run() -> None:  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover
-    run() 
+    run()
