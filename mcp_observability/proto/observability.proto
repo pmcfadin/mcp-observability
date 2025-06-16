@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package mcpobservability;
+
+// Basic sampling echo service used for MPC Observability MVP
+service ObservabilityService {
+  // Echo back a reply containing the prompt in uppercase.
+  rpc Sample (SampleRequest) returns (SampleResponse);
+
+  // Server streaming variant that emits each character of the prompt.
+  rpc SampleStream (SampleRequest) returns (stream SampleResponse);
+}
+
+message SampleRequest {
+  string prompt = 1;
+}
+
+message SampleResponse {
+  string reply = 1;
+} 
