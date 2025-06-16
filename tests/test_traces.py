@@ -53,8 +53,14 @@ async def test_trace_endpoints(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("MCP_TOKEN", "tok")
 
     # Patch helper functions instead of HTTP layer for simplicity
-    monkeypatch.setattr("app.main._fetch_trace_json", lambda trace_id: fake_trace)
-    monkeypatch.setattr("app.main._fetch_trace_logs", lambda trace_id, limit: ["l1"])
+    async def fake_json_fn(trace_id):
+        return fake_trace
+
+    async def fake_logs_fn(trace_id, limit):
+        return ["l1"]
+
+    monkeypatch.setattr("app.main._fetch_trace_json", fake_json_fn)
+    monkeypatch.setattr("app.main._fetch_trace_logs", fake_logs_fn)
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
