@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, status
+from pathlib import Path
 
 from mcp_observability.schemas import Resource, ResourceType
 
@@ -9,12 +10,20 @@ router = APIRouter(tags=["mcp"])
 # Example in-memory resources; in a real deployment this could be backed by a
 # database or fetched dynamically from connected systems.  IDs should be
 # unique within the server scope.
+_readme_path = Path(__file__).resolve().parent.parent / "README.md"
+try:
+    _readme_text = _readme_path.read_text(encoding="utf-8")
+except FileNotFoundError:
+    _readme_text = ""
+
 RESOURCES: list[Resource] = [
     Resource(
         id="readme",
         type=ResourceType.text,
         name="Project README",
         description="Top-level project documentation",
+        content=_readme_text,
+        metadata={"path": str(_readme_path)},
     )
 ]
 

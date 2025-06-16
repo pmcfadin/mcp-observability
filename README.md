@@ -25,6 +25,22 @@ Then visit `http://localhost:8000/health` to verify the service is running.
 | `/logs/errors` | GET | Fetches the last N error log lines from Loki (`limit` query param, default 100). |
 | `/metrics/latency` | GET | Returns latency percentile from Prometheus (`percentile`, `window` query params). |
 
+## MCP Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/resources` | GET | List MCP Resources (metadata & optional inline content) |
+| `/prompts` | GET | List templated Prompts, including `inputVariables` |
+| `/sampling` | POST | Accepts SamplingRequest JSON and returns SamplingResponse |
+
+All endpoints require a Bearer token (`MCP_TOKEN`) identical to the existing health/log/metrics routes.
+
+### Example
+
+```bash
+curl -H "Authorization: Bearer $MCP_TOKEN" http://localhost:8000/resources | jq
+```
+
 ## Tests
 
 ```bash

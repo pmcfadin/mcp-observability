@@ -16,4 +16,5 @@ async def test_prompts_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert response.status_code == 200
     data = response.json()
-    assert data and data[0]["id"] == "greet" 
+    ids = [p["id"] for p in data]
+    assert "greet" in ids and "troubleshoot_latency" in ids 

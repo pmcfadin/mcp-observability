@@ -12,7 +12,13 @@ PROMPTS: list[Prompt] = [
         template="Hello, {{name}}!",
         inputVariables=["name"],
         metadata={"category": "examples"},
-    )
+    ),
+    Prompt(
+        id="troubleshoot_latency",
+        template="Service {{service}} has high latency in the last {{window}}. Return top 3 suspected causes and a mitigation plan.",
+        inputVariables=["service", "window"],
+        metadata={"category": "troubleshooting"},
+    ),
 ]
 
 
