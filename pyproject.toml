@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "MCP Observability FastAPI service"
 authors = ["Patrick McFadin <pmcfadin@example.com>"]
 readme = "README.md"
-packages = [{ include = "app" }]
+packages = [{ include = "app" }, { include = "mcp_observability" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
