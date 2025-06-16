@@ -49,6 +49,36 @@ tempo:
 otelCollector:
   enabled: true
   mode: deployment
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+      filelog:
+        include:
+          - /var/log/app/**/*.log
+        start_at: beginning
+
+    processors:
+      batch:
+
+    exporters:
+      loki:
+        endpoint: http://loki:3100/loki/api/v1/push
+      otlp/tempo:
+        endpoint: tempo:4317
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          exporters: [otlp/tempo]
+        logs:
+          receivers: [filelog]
+          exporters: [loki]
   presets:
     kubernetesAttributes: true
     kubernetesClusterReceiver: true

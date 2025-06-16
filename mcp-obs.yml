@@ -15,6 +15,8 @@ services:
       - MCP_TOKEN=${MCP_TOKEN:-changeme}
     volumes:
       - certs:/certs:ro
+      # Shared log directory for filelog receiver
+      - ./logs:/var/log/app
     command:
       - uvicorn
       - app.main:app
@@ -50,6 +52,9 @@ services:
     volumes:
       # Ephemeral storage for collector state (buffers, etc.)
       - otel-data:/etc/otelcol/data
+      # Collector configuration and shared logs directory
+      - ./otel/collector-config.yaml:/etc/otelcol/config.yaml:ro
+      - ./logs:/var/log/app:ro
 
   # Loki – log aggregation
   loki:
