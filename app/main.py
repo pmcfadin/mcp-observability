@@ -13,6 +13,13 @@ app.include_router(resources_router)
 app.include_router(prompts_router)
 app.include_router(sampling_router)
 
+# ---------------------------------------------------------------------
+# Observability – tracing & metrics via OpenTelemetry
+# ---------------------------------------------------------------------
+from app.otel_setup import configure_opentelemetry  # noqa: E402
+
+configure_opentelemetry(app)
+
 
 @app.get(
     "/health",
