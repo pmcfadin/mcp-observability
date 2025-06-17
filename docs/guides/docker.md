@@ -88,10 +88,8 @@ docker compose -f mcp-obs.yml down -v          # stop & delete volumes (data los
 * **Ports already in use** – adjust the ports in `mcp-obs.yml` or stop the conflicting services.
 * **Certificate warnings** – the stack uses self-signed TLS certificates; pass `-k` to `curl` or import `certs/ca.crt` into your browser.
 * **No dashboards** – ensure `./grafana/provisioning` and `./grafana/dashboards` are mounted (default). 
----
 
-<!-- Content merged from "Using for local development.md" (previously docs/Using for local development.md) -->
-# Using MCP Observability for Local Development
+## Local Development Workflow
 
 This guide walks you through spinning up the **full observability stack** on your laptop with Docker Compose, sending some demo telemetry, and interacting with the MCP API.
 
