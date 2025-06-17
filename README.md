@@ -230,3 +230,7 @@ curl --cert client.crt --key client.key \
 ## Documentation
 
 * [Grafana Dashboards](docs/dashboards.md) – screenshots and description of bundled dashboards. 
+
+## Contributing
+
+We welcome pull requests and issues!  Before you start, please read the [Contributor Guide](docs/contributing/index.md) which covers architecture, file layout, dev-environment setup and the workflow we use for issues & pull-requests.
