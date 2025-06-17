@@ -59,6 +59,65 @@ helm install mcp charts/mcp-obs \
 
 The chart automatically creates a self-signed TLS certificate via cert-manager. Override issuer or disable TLS through `values.yaml` if desired.
 
+## 4.1 · Custom TLS issuer
+
+If your cluster already runs cert-manager with a ClusterIssuer (e.g. Let's Encrypt), override the issuer like so:
+
+```yaml
+# tls-issuer-values.yaml
+mcpServer:
+  tls:
+    enabled: true
+    issuer:
+      kind: ClusterIssuer
+      name: letsencrypt-prod
+```
+
+Install with:
+
+```bash
+helm install mcp charts/mcp-obs -n $NAMESPACE -f tls-issuer-values.yaml
+```
+
+## 4.2 · Resource limits & requests
+
+All sub-charts expose `resources` blocks. Example minimal limits:
+
+```yaml
+# resources-values.yaml
+mcpServer:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+prometheus:
+  server:
+    resources:
+      limits:
+        cpu: 1
+        memory: 2Gi
+```
+
+Apply with `-f resources-values.yaml` during installation or upgrade.
+
+## 4.3 · Enable / disable components individually
+
+Set the `enabled` flag under each top-level chart key (`grafana`, `loki`, `prometheus`, `tempo`, `otelCollector`). For example, API server with Grafana **only**:
+
+```bash
+helm install mcp charts/mcp-obs -n $NAMESPACE \
+  --set grafana.enabled=true \
+  --set prometheus.enabled=false \
+  --set loki.enabled=false \
+  --set tempo.enabled=false \
+  --set otelCollector.enabled=false
+```
+
+A full list of flags is documented in `charts/mcp-obs/values.yaml`.
+
 ---
 
 ## 5 · Accessing the services
@@ -110,4 +169,9 @@ PersistentVolumeClaims created by sub-charts are **not** deleted automatically; 
 
 * `helm install` hangs – check that the dependent charts were downloaded (`charts/` directory populated).
 * Pods in CrashLoopBackOff – run `kubectl logs` on the failing pod; verify secrets and image pulls.
-* TLS errors – disable TLS (`--set tls.enabled=false`) for testing, or configure an external issuer. 
+* TLS errors – disable TLS (`--set tls.enabled=false`) for testing, or configure an external issuer.
+
+## 8.1 · Troubleshooting CRDs & PV binding
+
+* **CRDs not installed** – ensure you run `helm dependency update charts/mcp-obs`; sub-charts such as Loki ship CRDs that Helm must apply.
+* **PVC stuck in Pending** – confirm your cluster has a default StorageClass and enough capacity; list classes with `kubectl get sc`. 
