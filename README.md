@@ -2,6 +2,49 @@
 
 This service exposes health, log, and metric endpoints that will be consumed by the MCP Observability platform.
 
+## Table of Contents
+
+- [Quick start](#quick-start-development)
+- [Architecture overview](#architecture-overview)
+- [Exposed Endpoints](#exposed-endpoints-mvp)
+- [MCP Endpoints](#mcp-endpoints)
+- [Deployment](#deployment)
+- [Running as an MCP server](#running-as-an-mcp-server)
+- [Authentication & TLS](#authentication--tls)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+
+## Architecture overview
+
+```mermaid
+flowchart TD
+  subgraph Clients
+    AI["AI Agents / CLI"]
+  end
+  subgraph API
+    MCP["MCP Server\n(FastAPI)"]
+  end
+  subgraph Storage[Observability Stack]
+    Loki[Loki]
+    Prom[Prometheus]
+    Tempo[Tempo]
+    Grafana[Grafana]
+  end
+  subgraph Ingest
+    OTEL["OpenTelemetry Collector"]
+  end
+  AI -->|HTTPS| MCP
+  MCP --> Loki
+  MCP --> Prom
+  MCP --> Tempo
+  Loki --> Grafana
+  Prom --> Grafana
+  Tempo --> Grafana
+  OTEL --> Loki
+  OTEL --> Prom
+  OTEL --> Tempo
+```
+
 ## Quick start (development)
 
 ```bash
