@@ -1,227 +1,97 @@
-# MCP Observability FastAPI Service
+# MCP Observability
 
-This service exposes health, log, and metric endpoints that will be consumed by the MCP Observability platform.
+**MCP Observability** gives your AI agents—and you—a single HTTPS endpoint to explore logs, metrics and traces for any application, without learning half-a-dozen vendor APIs.
 
-## Table of Contents
+•   Standards-based: OpenTelemetry ingestion, Grafana/Loki/Tempo storage  
+•   AI-ready: implements the Model-Context-Protocol (MCP) so agents can ask natural-language questions about performance issues  
+•   Zero-lock-in: self-host via Docker Compose, Kubernetes (Helm) or any cloud container platform
 
-- [Quick start](#quick-start-development)
-- [Architecture overview](#architecture-overview)
-- [Exposed Endpoints](#exposed-endpoints-mvp)
-- [MCP Endpoints](#mcp-endpoints)
-- [Deployment](#deployment)
-- [Running as an MCP server](#running-as-an-mcp-server)
-- [Authentication & TLS](#authentication--tls)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
+---
 
-## Architecture overview
+## 1 · Why would I use this?
 
-```mermaid
-flowchart TD
-  subgraph Clients
-    AI["AI Agents / CLI"]
-  end
-  subgraph API
-    MCP["MCP Server\n(FastAPI)"]
-  end
-  subgraph Storage[Observability Stack]
-    Loki[Loki]
-    Prom[Prometheus]
-    Tempo[Tempo]
-    Grafana[Grafana]
-  end
-  subgraph Ingest
-    OTEL["OpenTelemetry Collector"]
-  end
-  AI -->|HTTPS| MCP
-  MCP --> Loki
-  MCP --> Prom
-  MCP --> Tempo
-  Loki --> Grafana
-  Prom --> Grafana
-  Tempo --> Grafana
-  OTEL --> Loki
-  OTEL --> Prom
-  OTEL --> Tempo
-```
+Imagine asking your favourite coding agent:
 
-## Quick start (development)
+> "The /checkout endpoint went 💥 at 09:33 UTC. Why?"
+
+The agent queries the MCP endpoint, pulls traces, error logs and latency metrics, and replies with an RCA—and a pull-request suggestion.  **That** is what this repo enables.
+
+---
+
+## 2 · How do I run it?
+
+Choose the deployment style that fits you:
+
+| Environment | Quick start | Full guide |
+|-------------|------------|------------|
+| Local laptop | `docker compose -f mcp-obs.yml up -d` | [Docker guide](docs/guides/docker.md) |
+| Kubernetes   | `helm install mcp charts/mcp-obs`      | [Kubernetes & Helm](docs/guides/kubernetes.md) |
+| Cloud (ECS, Cloud Run, Azure CA) | see Terraform/CLI snippets | [Cloud deployment](docs/guides/cloud-deployment.md) |
+
+After the stack is up:
 
 ```bash
-# Install Poetry if you don't have it
-pipx install poetry
+export MCP_TOKEN="$(openssl rand -hex 16)"   # use the same token you passed during install
 
-# Install dependencies (Python 3.12)
-poetry install --with dev
-
-# Run the application with hot-reload
-poetry run python -m app.main
+# Health check
+curl -k -H "Authorization: Bearer $MCP_TOKEN" https://<HOST>:8000/health
 ```
 
-Then visit `http://localhost:8000/health` to verify the service is running.
+Open Grafana at `https://<HOST>:3000` (admin / $GF_ADMIN_PASSWORD) to browse dashboards.
 
-## Exposed Endpoints (MVP)
+---
 
-| Path | Method | Description |
-|------|--------|-------------|
-| `/health` | GET | Returns `{"status": "ok"}` when the service is healthy. |
-| `/logs/errors` | GET | Fetches the last N error log lines from Loki (`limit` query param, default 100). |
-| `/metrics/latency` | GET | Returns latency percentile from Prometheus (`percentile`, `window` query params). |
+## 3 · Talking to the MCP endpoint
 
-## MCP Endpoints
+All requests are HTTPS + Bearer-token.  Key endpoints:
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/resources` | GET | List MCP Resources (metadata & optional inline content) |
-| `/prompts` | GET | List templated Prompts, including `inputVariables` |
-| `/sampling` | POST | Accepts SamplingRequest JSON and returns SamplingResponse |
+| Path | What it's for |
+|------|---------------|
+| `/logs/errors?limit=100` | Latest error logs from Loki |
+| `/metrics/latency?percentile=0.95` | 95-th percentile latency from Prometheus |
+| `/resources` | Metadata describing the data sources your agent can query |
+| `/prompts` | Parameterised prompt templates you can re-use |
 
-All endpoints require a Bearer token (`MCP_TOKEN`) identical to the existing health/log/metrics routes.
+### Example agent prompt
 
-### Example
+> "Retrieve the top three slowest routes over the last hour and suggest an optimisation."
 
-```bash
-curl -H "Authorization: Bearer $MCP_TOKEN" http://localhost:8000/resources | jq
-```
+that becomes an MCP `SamplingRequest` under the hood; the server stitches data from Prometheus & Tempo and returns JSON your agent can read.
 
-## Tests
+---
 
-```bash
-poetry run pytest -q
-```
+## 4 · Instrumenting your application
 
-## Linting / Type-checking
+Pick your language guide and drop in the ready-made snippet:
 
-```bash
-poetry run black --check .
-poetry run isort --check-only .
-poetry run mypy app
-```
+* Python & FastAPI – [docs/observability/python_fastapi.md](docs/observability/python_fastapi.md)
+* Java / Spring Boot – [docs/observability/java_spring.md](docs/observability/java_spring.md)
+* Node.js – [docs/observability/nodejs.md](docs/observability/nodejs.md)
+* Go – [docs/observability/go.md](docs/observability/go.md)
+* Next.js & React SPA – see the respective frontend guides
 
-## Deployment
+Need only a subset (e.g. logs-only)?  Use the [Partial-deployment guide](docs/guides/partial-deployment.md).
 
-### Local (Docker Compose)
+---
 
-_For the full step-by-step guide (prereqs, troubleshooting, screenshots) see **[docs/guides/docker.md](docs/guides/docker.md)**._
+## 5 · Security in two minutes
 
-```bash
-# one-liner quick start (ephemeral volumes)
-docker compose -f mcp-obs.yml up -d
-```
+1.  **Bearer token** – set `MCP_TOKEN` in your deployment and pass it in `Authorization` headers.
+2.  **TLS** – self-signed by default (dev), or plug in cert-manager / ACM / Cloud CA.
+3.  **mTLS (optional)** – enable client cert auth by mounting your CA & toggling `security.mtls=true` in `values.yaml`.
 
-Then visit:
-* Grafana → http://localhost:3000 (admin / ${GF_ADMIN_PASSWORD:-admin})
-* API health → https://localhost:8000/health (pass `MCP_TOKEN` header)
+---
 
-> Use `docker compose down -v` to tear down and delete volumes.
+## 6 · Troubleshooting cheatsheet
 
-### Kubernetes (Helm)
+| Symptom | Check | Fix |
+|---------|-------|-----|
+| `401 Unauthorized` | Correct token? | Pass `-H "Authorization: Bearer $MCP_TOKEN"` |
+| No traces showing | Otel-collector healthy? Endpoint URL correct in client? | Verify port 4318 reachable |
+| Grafana empty dashboards | Components disabled | See [Partial deployment](docs/guides/partial-deployment.md) |
 
-_See **[docs/guides/kubernetes.md](docs/guides/kubernetes.md)** for persistence options, TLS issuers, and troubleshooting._
+---
 
-```bash
-helm repo update
-helm install mcp charts/mcp-obs --namespace observability --create-namespace
-```
+## 7 · I want to hack on the code!
 
-## Running as an MCP server
-
-This repository also exposes the service via the **Model Context Protocol** (MCP). Install the extra dependency and run:
-
-```bash
-# install deps (if not already)
-poetry install --with dev
-
-# start the stdio MCP server
-poetry run python -m app.mcp_server
-```
-
-Then add the server in clients such as Claude Desktop or the MCP Inspector:
-
-```json
-{
-  "mcpServers": {
-    "observability": {
-      "command": "poetry",
-      "args": ["run", "python", "-m", "app.mcp_server"]
-    }
-  }
-}
-```
-
-## Authentication & TLS
-
-All MCP Server endpoints are protected by **Bearer-token** authentication and, by default, served over **HTTPS**.
-
-### 1. Setting the token (MCP_TOKEN)
-
-The expected token is read from environment variable `MCP_TOKEN` **inside the server container**.  You must
-provide the *same* token when making requests:
-
-```bash
-# Compose (docker compose up)
-export MCP_TOKEN="s3cr3t"
-
-# Helm
-helm install mcp charts/mcp-obs \
-  --namespace observability --create-namespace \
-  --set mcpServer.env.MCP_TOKEN=$MCP_TOKEN
-```
-
-Requests that omit or supply the wrong token receive `401 Unauthorized`.
-
-### 2. Local HTTPS (Compose)
-
-The `mcp-certgen` sidecar automatically generates a self-signed CA and server certificate (valid 90 days, auto-rotated on restart) and mounts them into `mcp-server`.  Once Compose is up you can hit the `/health` endpoint:
-
-```bash
-curl -k \
-  -H "Authorization: Bearer $MCP_TOKEN" \
-  https://localhost:8000/health
-# → {"status":"ok"}
-```
-
-* `-k` skips certificate verification because the server uses a self-signed cert.
-
-### 3. Kubernetes (cert-manager)
-
-When the chart installs with `tls.enabled=true` (default) it provisions:
-
-* A self-signed `Issuer` named `mcp-selfsigned-issuer`.*
-* A `Certificate` (90 days, `renewBefore: 30d`) stored in secret `mcp-server-tls`.
-
-If you already operate cert-manager with a cluster-wide `ClusterIssuer`, disable issuer creation and reference your own:
-
-```bash
-helm install mcp charts/mcp-obs \
-  --set "tls.issuer.create=false" \
-  --set "tls.issuer.name=letsencrypt-prod" \
-  --set "tls.issuer.kind=ClusterIssuer"
-```
-
-### 4. Example with mTLS client certificate
-
-```bash
-# generate client cert signed by sidecar CA
-openssl req -newkey rsa:2048 -nodes -keyout client.key \
-  -subj "/CN=example-client" -out client.csr
-
-# CA is available at ./certs/ca.crt once compose is up
-openssl x509 -req -in client.csr -CA certs/ca.crt -CAkey certs/ca.key \
-  -CAcreateserial -out client.crt -days 30
-
-curl --cert client.crt --key client.key \
-  -H "Authorization: Bearer $MCP_TOKEN" \
-  https://localhost:8000/health
-# → {"status":"ok"}
-```
-
-*Replace `certs/` paths with the mounted location inside your dev environment.*
-
-## Documentation
-
-* [Grafana Dashboards](docs/dashboards.md) – screenshots and description of bundled dashboards. 
-
-## Contributing
-
-We welcome pull requests and issues!  Before you start, please read the [Contributor Guide](docs/contributing/index.md) which covers architecture, file layout, dev-environment setup and the workflow we use for issues & pull-requests.
+Fantastic 🎉 — head over to **[docs/contributing](docs/contributing/)** for architecture diagrams, dev-environment setup, and the contributor workflow.  The README you're reading will stay laser-focused on **users** and **agents**.
