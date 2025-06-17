@@ -102,79 +102,27 @@ poetry run mypy app
 
 ### Local (Docker Compose)
 
-```bash
-# Start all components (fast, ephemeral storage)
-docker compose -f mcp-obs.yml up -d
-
-# Tear down
-# docker compose -f mcp-obs.yml down -v
-```
-
-Services started:
-* `mcp-server` – FastAPI application (port 8000)
-* `grafana` – Dashboards UI (port 3000, default admin `admin/admin`)
-* `prometheus` – Metrics (port 9090)
-* `loki` – Logs (port 3100)
-* `tempo` – Traces (port 3200)
-* `otel-collector` – OpenTelemetry entry point (ports 4317/4318)
-
-#### Accessing Grafana Dashboards
-
-Once Compose is up you can explore the pre-bundled dashboards:
-
-```text
-URL:    http://localhost:3000
-User:   admin
-Pass:   ${GF_ADMIN_PASSWORD:-admin}
-```
-
-Dashboards are automatically provisioned into the **General** folder. After logging in, navigate to *Dashboards ▸ Browse* to view latency, error rate, and trace overview panels.
-
-Tip: set `GF_ADMIN_PASSWORD` before running `docker compose` to override the default admin password:
+_For the full step-by-step guide (prereqs, troubleshooting, screenshots) see **[docs/guides/docker.md](docs/guides/docker.md)**._
 
 ```bash
-export GF_ADMIN_PASSWORD="supersecret"
+# one-liner quick start (ephemeral volumes)
 docker compose -f mcp-obs.yml up -d
 ```
 
-The default Compose file uses **ephemeral named volumes**. Data vanishes on `down -v`. If you need persistence, map the volumes to host paths or use the Helm chart below.
+Then visit:
+* Grafana → http://localhost:3000 (admin / ${GF_ADMIN_PASSWORD:-admin})
+* API health → https://localhost:8000/health (pass `MCP_TOKEN` header)
+
+> Use `docker compose down -v` to tear down and delete volumes.
 
 ### Kubernetes (Helm)
 
-Prerequisites: Helm v3.12+ and access to a cluster.
+_See **[docs/guides/kubernetes.md](docs/guides/kubernetes.md)** for persistence options, TLS issuers, and troubleshooting._
 
 ```bash
-# Update chart dependencies
-ahelm dependency update charts/mcp-obs
-
-# Install into namespace "observability"
-helm install mcp charts/mcp-obs \
-  --namespace observability --create-namespace \
-  --set grafana.persistence.enabled=true \
-  --set loki.persistence.enabled=true \
-  --set prometheus.server.persistentVolume.enabled=true \
-  --set tempo.persistence.enabled=true
+helm repo update
+helm install mcp charts/mcp-obs --namespace observability --create-namespace
 ```
-
-Alternatively provide a `my-values.yaml`:
-
-```yaml
-persistence:
-  enabled: true  # convenience flag (does **not** auto-propagate)
-
-loki:
-  persistence:
-    enabled: true
-    size: 10Gi
-# ... other component overrides ...
-```
-
-```bash
-helm install mcp charts/mcp-obs -f my-values.yaml --namespace observability --create-namespace
-```
-
-### Drift detection in CI
-A GitHub Actions workflow (`.github/workflows/drift-check.yml`) automatically compares the services defined in `mcp-obs.yml` with the Helm chart dependencies. Pull requests touching either manifest will fail if they diverge. 
 
 ## Running as an MCP server
 
