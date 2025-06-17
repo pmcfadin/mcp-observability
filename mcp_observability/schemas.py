@@ -55,6 +55,11 @@ class Resource(BaseModel):
     metadata: Dict[str, Any] = Field(
         default_factory=dict, description="Arbitrary caller-defined metadata"
     )
+    mimeType: Optional[str] = Field(
+        None,
+        alias="mimeType",
+        description="Optional MIME type hint (e.g. 'text/plain', 'application/json').",
+    )
 
     class Config:
         """Model configuration."""
@@ -68,6 +73,7 @@ class Resource(BaseModel):
 
 class ResourcePage(BaseModel):
     resources: list["Resource"]
+    templates: list["ResourceTemplate"] | None = None
     next_cursor: int | None = Field(None, alias="nextCursor")
 
     class Config:
@@ -266,4 +272,22 @@ class Manifest(BaseModel):
 
     class Config:
         populate_by_name = True
-        extra = "forbid" 
+        extra = "forbid"
+
+
+# ---------------------------------------------------------------------------
+# Resource Templates (dynamic resources)
+# ---------------------------------------------------------------------------
+
+
+class ResourceTemplate(BaseModel):
+    """URI template entry as defined by the MCP specification."""
+
+    uri_template: str = Field(..., alias="uriTemplate")
+    name: str
+    description: str | None = None
+    mimeType: str | None = None
+
+    class Config:
+        populate_by_name = True
+        extra = "forbid"

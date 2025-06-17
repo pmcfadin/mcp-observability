@@ -9,14 +9,14 @@ set -euo pipefail
 printf "\n🔍  Scanning for epics ready to close …\n\n"
 
 # List all open issues tagged "epic" and iterate over their numbers.
-mapfile -t EPICS < <(gh issue list --label epic --state open --json number -q '.[].number')
+EPICS=$(gh issue list --label epic --state open --json number -q '.[].number')
 
-if [[ ${#EPICS[@]} -eq 0 ]]; then
+if [[ -z "$EPICS" ]]; then
   echo "🎉  No open epics found. Nothing to do."
   exit 0
 fi
 
-for EPIC in "${EPICS[@]}"; do
+for EPIC in $EPICS; do
   # Does this epic still have any OPEN tasks?
   if gh issue view "$EPIC" --json taskLists -q '.taskLists[].items[] | select(.state=="OPEN")' | grep -q .; then
     echo "⏭️  Epic #$EPIC still has open tasks – skipping."

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 
 from mcp_observability.schemas import Prompt
 
@@ -12,8 +12,11 @@ router = APIRouter(tags=["mcp"])
 
 
 @router.get("/prompts", response_model=List[Prompt], status_code=status.HTTP_200_OK)
-async def prompts_list() -> List[Prompt]:
-    return list_prompts()
+async def prompts_list(category: str | None = Query(None)) -> List[Prompt]:
+    prompts = list_prompts()
+    if category is not None:
+        prompts = [p for p in prompts if p.metadata.get("category") == category]
+    return prompts
 
 
 class RenderRequest(Dict[str, str]):  # type: ignore[misc]

@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 
 from mcp_observability.schemas import Resource, ResourcePage
 
-from app.resource_store import get_resource, list_resources
+from app.resource_store import get_resource, list_resources, list_templates
 
 router = APIRouter(tags=["mcp"])
 
@@ -32,7 +32,11 @@ async def resources_list(
     all_res = list_resources()
     page_items: List[Resource] = all_res[cursor : cursor + limit]
     next_cursor = cursor + limit if cursor + limit < len(all_res) else None
-    return ResourcePage(resources=page_items, nextCursor=next_cursor)  # type: ignore[arg-type]
+    return ResourcePage(
+        resources=page_items,
+        templates=list_templates() if cursor == 0 else None,
+        nextCursor=next_cursor,  # type: ignore[arg-type]
+    )
 
 
 @router.get(
