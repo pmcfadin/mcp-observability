@@ -23,7 +23,7 @@ docker run -d --name mcp-server \
   -e PROMETHEUS_BASE_URL=https://prom.prod.mycorp:9090 \
   -e TEMPO_BASE_URL=https://tempo.prod.mycorp:3200 \
   -e ALERTMANAGER_BASE_URL=https://prom.prod.mycorp:9093/alertmanager \
-  -p 8081:8000 ghcr.io/<you>/mcp-observability:latest
+  -p 8081:8000 docker.io/pmcfadin/mcp-observability:latest
 ```
 
 *Exposes HTTP on port 8081.*  Verify:
@@ -45,7 +45,7 @@ docker run -d --name mcp-server \
   -v $PWD/tls/server.key:/certs/server.key:ro \
   -v $PWD/tls/ca.crt:/certs/ca.crt:ro \
   -e LOKI_BASE_URL=… -e PROMETHEUS_BASE_URL=… (etc.) \
-  -p 8443:8000 ghcr.io/<you>/mcp-observability:latest
+  -p 8443:8000 docker.io/pmcfadin/mcp-observability:latest
 ```
 
 If you **omit** `ca.crt`, clients can connect with ordinary HTTPS.
