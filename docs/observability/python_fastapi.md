@@ -29,31 +29,46 @@ export OTEL_SERVICE_NAME="my-python-app"
 
 If `MCP_TOKEN` is required by `mcp-server` you still only need the collector URL; the collector forwards data internally.
 
----
+## 2.1 · FastAPI specific setup
 
-## 3 · Manual instrumentation example
+Install the FastAPI instrumentation shim:
+
+```bash
+pip install opentelemetry-instrumentation-fastapi
+```
+
+In your `main.py` (or wherever you create the ASGI app):
 
 ```python
-from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from fastapi import FastAPI
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 
-# 1. Configure tracer provider
-resource = Resource.create({"service.name": "my-python-app"})
-provider = TracerProvider(resource=resource)
-trace.set_tracer_provider(provider)
+app = FastAPI()
 
-# 2. Add OTLP HTTP exporter (collector)
-exporter = OTLPSpanExporter(endpoint="http://localhost:4318/v1/traces")
-provider.add_span_processor(BatchSpanProcessor(exporter))
+# Attach instrumentation (captures requests, errors, latency)
+FastAPIInstrumentor.instrument_app(app)
+# optional: explicit middleware as alternative
+# app.add_middleware(OpenTelemetryMiddleware)
 
-tracer = trace.get_tracer(__name__)
+@app.get("/hello")
+async def hello():
+    return {"msg": "hello"}
+```
 
-# 3. Create spans in your code
-with tracer.start_as_current_span("demo-operation"):
-    print("Doing work…")
+The instrumentation automatically creates spans for each request with attributes like `http.method`, `http.route`, `http.status_code`.
+
+---
+
+## 3 · Configure OTLP exporter towards mcp-observability
+
+If you deployed **mcp-observability** via Docker Compose the default collector endpoint is `http://localhost:4318`.
+
+For Kubernetes / remote clusters, point to the *otel-collector* `ClusterIP` service:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://otel-collector.observability.svc:4318"
+export OTEL_EXPORTER_OTLP_HEADERS="mcp-token=<YOUR_MCP_TOKEN>"
 ```
 
 ---
@@ -88,4 +103,12 @@ opentelemetry-instrument \
 
 * **No spans appear** – confirm the `otel-collector` container is healthy and the endpoint URL/port are correct.
 * **Connection refused** – ensure Docker Compose stack is running and port 4318 is not firewalled.
-* **High cardinality warnings** – set `OTEL_ATTRIBUTE_COUNT_LIMIT`, `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` as needed. 
+* **High cardinality warnings** – set `OTEL_ATTRIBUTE_COUNT_LIMIT`, `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` as needed.
+
+## 7 · AI Agent prompt (copy-paste)
+
+> "You are an AI code assistant. Modify the existing FastAPI project to emit OpenTelemetry traces, metrics and logs to a remote OTLP endpoint. Requirements:\n\n* Use `opentelemetry-sdk>=1.25`, `opentelemetry-instrumentation-fastapi`, and `opentelemetry-exporter-otlp`.\n* Set exporter endpoint to `${OTEL_EXPORTER_OTLP_ENDPOINT}` and add `${MCP_TOKEN}` to `mcp-token` HTTP header.\n* Instrument FastAPI routes automatically and ensure startup/shutdown events are traced.\n* Capture HTTP client calls via `opentelemetry-instrumentation-requests`.\n* Output example `.env` file with OTEL variables."
+
+Paste this into your preferred agent (e.g. Cursor, Claude) to auto-patch the service.
+
+--- 
