@@ -35,7 +35,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/mcp-server
+          images: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/mcp-observability
           tags: |
             type=raw,value=latest
             type=ref,event=branch
