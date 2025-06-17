@@ -68,7 +68,8 @@ Pick your language guide and drop in the ready-made snippet:
 * Java / Spring Boot – [docs/observability/java_spring.md](docs/observability/java_spring.md)
 * Node.js – [docs/observability/nodejs.md](docs/observability/nodejs.md)
 * Go – [docs/observability/go.md](docs/observability/go.md)
-* Next.js & React SPA – see the respective frontend guides
+* Next.js – [docs/observability/nextjs.md](docs/observability/nextjs.md)
+* React SPA – [docs/observability/react.md](docs/observability/react.md)
 
 Need only a subset (e.g. logs-only)?  Use the [Partial-deployment guide](docs/guides/partial-deployment.md).
 
