@@ -28,4 +28,29 @@ Dashboards auto-load thanks to the provisioning config at `grafana/provisioning/
   ```bash
   poetry run python scripts/fetch_dashboards.py
   ```
-* Commit the resulting JSON changes so CI (dashboard-lint) can validate them. 
+* Commit the resulting JSON changes so CI (dashboard-lint) can validate them.
+
+## Importing into an existing Grafana
+
+If you already have Grafana running elsewhere (Kubernetes, VM or SaaS), you can import the dashboards individually:
+
+1. In Grafana, go to **Dashboards → Import**.
+2. Click **Upload JSON file** and choose the dashboard file from `grafana/dashboards/` (e.g. `error_ops.json`).
+3. Select the data sources that match your environment (Prometheus, Loki, Tempo) if prompted.
+4. Click **Import**.
+
+Alternatively, you can automate via the HTTP API:
+
+```bash
+GRAFANA_URL=https://grafana.mycorp.com
+API_KEY=... # create an "Admin" API key
+
+for d in grafana/dashboards/*.json; do
+  curl -s -H "Authorization: Bearer $API_KEY" \
+       -H "Content-Type: application/json" \
+       -X POST "$GRAFANA_URL/api/dashboards/db" \
+       -d @"$d" | jq '.status'
+done
+```
+
+> Make sure the required data sources exist in the target Grafana org first. 
