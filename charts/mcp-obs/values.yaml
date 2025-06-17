@@ -26,6 +26,13 @@ loki:
   persistence:
     enabled: false   # If true, creates PVC via Loki chart
     size: 5Gi
+  loki:
+    storage:
+      type: filesystem  # avoids object storage nil errors in strict lint
+      bucketNames:
+        chunks: ""
+        ruler: ""
+        admin: ""
 
 grafana:
   enabled: true
