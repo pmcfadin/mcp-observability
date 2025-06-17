@@ -1,4 +1,4 @@
-# AI Agent Orchestration Prompt – **mcp-observability**
+# Contributor Workflow & Issue Etiquette
 
 > Use this playbook whenever an autonomous agent (or human acting as one) needs to pick work, create issues, and log progress in this repository.
 
