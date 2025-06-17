@@ -9,4 +9,8 @@ metadata:
 data:
   error_ops.json: |
 {{ (.Files.Get "grafana/dashboards/error_ops.json") | indent 4 }}
+  loki_16110.json: |
+{{ (.Files.Get "grafana/dashboards/loki_16110.json") | indent 4 }}
+  tempo_13175.json: |
+{{ (.Files.Get "grafana/dashboards/tempo_13175.json") | indent 4 }}
 {{- end }} 

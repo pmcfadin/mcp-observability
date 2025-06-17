@@ -142,4 +142,28 @@ fi
 
 ---
 
-*Last updated: 17 Jun 2025* 
+## 7 · Automated epic cleanup (optional)
+
+The manual steps above are useful when you are actively triaging work.  If you just want to keep the issues tidy – for example, close epics whose check-lists are already 100 % complete – you can run a short housekeeping script.
+
+```bash
+# close_epics.sh – run from the repository root
+
+echo "🔍  Scanning for epics ready to close …"
+
+# Grab all open epics (label: epic) and iterate over them.
+for EPIC in $(gh issue list --label epic --state open --json number -q '.[].number'); do
+  if ! gh issue view "$EPIC" --json taskLists -q '.taskLists[].items[] | select(.state=="OPEN")' | grep -q .; then
+    echo "✅  Closing epic #$EPIC – no open child tasks remain."
+    gh issue close "$EPIC" --comment "✅ All child tasks closed – housekeeping auto-close." | cat
+  else
+    echo "⏭️  Epic #$EPIC still has open tasks – skipping."
+  fi
+done
+```
+
+Place the snippet in `scripts/close_epics.sh`, `chmod +x` it, and schedule it via a CI job or a weekly cron to keep your board clean.
+
+---
+
+*Last updated: 18 Jun 2025* 
