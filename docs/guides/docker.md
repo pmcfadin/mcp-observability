@@ -43,7 +43,7 @@ export GF_ADMIN_PASSWORD="supersecret"
 docker compose -f mcp-obs.yml up -d
 ```
 
-The command builds / pulls images and starts the following containers:
+The command pulls pre-built images and starts the following containers:
 
 | Service | Purpose | Host port |
 |---------|---------|----------|

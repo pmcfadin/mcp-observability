@@ -3,9 +3,7 @@ version: "3.9"
 services:
   # MCP Application Server
   mcp-server:
-    build:
-      context: .
-      dockerfile: Dockerfile  # TODO: Provide production-ready Dockerfile in later task
+    image: pmcfadin/mcp-observability:latest  # Pull prebuilt image from Docker Hub
     container_name: mcp-server
     ports:
       - "8000:8000"

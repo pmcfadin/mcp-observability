@@ -29,6 +29,7 @@ Choose the deployment style that fits you:
 | Cloud (ECS, Cloud Run, Azure CA) | see Terraform/CLI snippets | [Cloud deployment](docs/guides/cloud-deployment.md) |
 
 After the stack is up:
+> **Note** – the Compose file now pulls the pre-built image `pmcfadin/mcp-observability:latest` from Docker Hub; no local Docker build is required.
 
 ```bash
 export MCP_TOKEN="$(openssl rand -hex 16)"   # use the same token you passed during install

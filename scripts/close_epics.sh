@@ -17,12 +17,14 @@ if [[ -z "$EPICS" ]]; then
 fi
 
 for EPIC in $EPICS; do
-  # Does this epic still have any OPEN tasks?
-  if gh issue view "$EPIC" --json taskLists -q '.taskLists[].items[] | select(.state=="OPEN")' | grep -q .; then
-    echo "⏭️  Epic #$EPIC still has open tasks – skipping."
+  # Does this epic still have any OPEN child issues referencing it ("Tracks #<EPIC>")?
+  OPEN_CHILD_COUNT=$(gh issue list --state open --search "\"Tracks #$EPIC\"" --json number -q "map(select(.number != $EPIC)) | length")
+
+  if [[ "$OPEN_CHILD_COUNT" -gt 0 ]]; then
+    echo "⏭️  Epic #$EPIC still has $OPEN_CHILD_COUNT open child issues – skipping."
   else
-    echo "✅  Closing epic #$EPIC – no open child tasks remain."
-    gh issue close "$EPIC" --comment "✅ All child tasks closed – housekeeping auto-close." | cat
+    echo "✅  Closing epic #$EPIC – no open child issues remain."
+    gh issue close "$EPIC" --comment "✅ All child issues closed – housekeeping auto-close." | cat
   fi
   echo "---"
 done
