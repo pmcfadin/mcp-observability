@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import os
-from typing import Optional, Any
+from typing import Any, Optional
 
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from mcp_observability.schemas import (
     Message,
@@ -47,7 +47,9 @@ _OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 _OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 
 
-@router.post("/sampling", response_model=SamplingResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/sampling", response_model=SamplingResponse, status_code=status.HTTP_200_OK
+)
 async def sampling_endpoint(request: SamplingRequest) -> SamplingResponse:
     """Proxy a sampling request to an upstream client or echo back.
 
@@ -65,7 +67,9 @@ async def sampling_endpoint(request: SamplingRequest) -> SamplingResponse:
             # Assume rst already matches SamplingResponse schema.
             return SamplingResponse(**rst)
         except Exception as exc:  # pragma: no cover – network failure path
-            raise HTTPException(status_code=502, detail=f"Sampler proxy error: {exc}") from exc
+            raise HTTPException(
+                status_code=502, detail=f"Sampler proxy error: {exc}"
+            ) from exc
 
     # 3. OpenAI fallback if credentials provided ---------------------------------------
     if _openai_available and _OPENAI_API_KEY:
@@ -81,7 +85,9 @@ async def sampling_endpoint(request: SamplingRequest) -> SamplingResponse:
 
             # Include optional system prompt at beginning
             if request.system_prompt:
-                oa_messages.insert(0, {"role": "system", "content": request.system_prompt})
+                oa_messages.insert(
+                    0, {"role": "system", "content": request.system_prompt}
+                )
 
             rsp = openai.chat.completions.create(  # type: ignore[attr-defined]
                 model=_OPENAI_MODEL,
@@ -99,15 +105,23 @@ async def sampling_endpoint(request: SamplingRequest) -> SamplingResponse:
                 stop_reason=choice.finish_reason,
             )
         except Exception as exc:  # pragma: no cover – network/credential errors
-            raise HTTPException(status_code=502, detail=f"OpenAI proxy error: {exc}") from exc
+            raise HTTPException(
+                status_code=502, detail=f"OpenAI proxy error: {exc}"
+            ) from exc
 
     # --- Fallback: local echo ---------------------------
-    first_user_msg = next((m for m in request.messages if m.role == MessageRole.user), None)
-    reply_text = first_user_msg.content.text.upper() if isinstance(first_user_msg, Message) else "OK"
+    first_user_msg = next(
+        (m for m in request.messages if m.role == MessageRole.user), None
+    )
+    reply_text = (
+        first_user_msg.content.text.upper()
+        if isinstance(first_user_msg, Message)
+        else "OK"
+    )
 
     return SamplingResponse(
         model="mock",
         role=MessageRole.assistant,
         content=MessageContent(type=MessageContentType.text, text=reply_text),
         stop_reason="endTurn",
-    ) 
+    )

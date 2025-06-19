@@ -10,7 +10,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Dict, List
 
-from mcp_observability.schemas import Resource, ResourceType, ResourceTemplate
+from mcp_observability.schemas import Resource, ResourceTemplate, ResourceType
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -126,4 +126,4 @@ def get_resource(resource_id: str) -> Resource | None:
     for res in list_resources():
         if res.id == resource_id:
             return res
-    return None 
+    return None

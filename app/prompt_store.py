@@ -7,7 +7,7 @@ from threading import Lock
 from typing import Dict, List
 
 import yaml
-from jinja2 import Environment, BaseLoader, TemplateError
+from jinja2 import BaseLoader, Environment, TemplateError
 
 from mcp_observability.schemas import Prompt
 
@@ -63,4 +63,4 @@ def render_prompt(prompt: Prompt, args: Dict[str, str]) -> str:
         template = env.from_string(prompt.template)
         return template.render(**args)
     except TemplateError as exc:
-        raise ValueError(f"Template render error: {exc}") from exc 
+        raise ValueError(f"Template render error: {exc}") from exc

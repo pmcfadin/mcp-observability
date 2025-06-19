@@ -1,7 +1,8 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 
-from app.main import app, _execute_promql
+from app.main import app
+from app.routers.metrics import _execute_promql
 
 
 class DummyResponse:
@@ -40,7 +41,7 @@ async def test_execute_promql_success(monkeypatch: pytest.MonkeyPatch):
     }
 
     monkeypatch.setattr(
-        "app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json)
+        "app.routers.metrics.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json)
     )
 
     result = await _execute_promql("up")
@@ -59,7 +60,7 @@ async def test_metrics_query_endpoint(monkeypatch: pytest.MonkeyPatch):
 
     monkeypatch.setenv("MCP_TOKEN", "testtoken")
     monkeypatch.setattr(
-        "app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json)
+        "app.routers.metrics.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json)
     )
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)

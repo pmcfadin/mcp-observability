@@ -2,8 +2,13 @@ from typing import Any, List
 
 from mcp.server.fastmcp import FastMCP
 
-from app.main import (_fetch_error_logs, _fetch_latency_percentile,
-                      _fetch_trace_json, _fetch_trace_logs, _search_logs)
+from app.main import (
+    _fetch_error_logs,
+    _fetch_latency_percentile,
+    _fetch_trace_json,
+    _fetch_trace_logs,
+    _search_logs,
+)
 
 mcp = FastMCP("mcp-observability-server")
 
@@ -15,7 +20,9 @@ async def health() -> str:  # type: ignore[override]
     return "ok"
 
 
-@mcp.tool(description="Fetch last N error log lines from Loki (optional service & range)")
+@mcp.tool(
+    description="Fetch last N error log lines from Loki (optional service & range)"
+)
 async def error_logs(
     limit: int = 100,
     service: str | None = None,
@@ -81,7 +88,9 @@ async def metrics_query(query: str) -> Any:  # type: ignore[override]
 # Alerts tool --------------------------------------------------------------
 
 
-@mcp.tool(description="Return active alerts from Alertmanager filtered by severity/service")
+@mcp.tool(
+    description="Return active alerts from Alertmanager filtered by severity/service"
+)
 async def alerts_tool(severity: str | None = None, service: str | None = None) -> list[dict[str, Any]]:  # type: ignore[override]
     from app.main import _fetch_active_alerts
 

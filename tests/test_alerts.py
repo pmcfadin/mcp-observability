@@ -1,7 +1,8 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 
-from app.main import app, _fetch_active_alerts
+from app.main import app
+from app.routers.alerts import _fetch_active_alerts
 
 
 class DummyResponse:
@@ -34,7 +35,7 @@ async def test_fetch_active_alerts_filters(monkeypatch: pytest.MonkeyPatch):
         {"labels": {"alertname": "HighMem", "severity": "warning", "service": "worker"}},
     ]
 
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=alerts_json))
+    monkeypatch.setattr("app.routers.alerts.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=alerts_json))
 
     filtered = await _fetch_active_alerts(severity="critical", service="api")
     assert filtered == [alerts_json[0]]
@@ -47,12 +48,12 @@ async def test_alerts_endpoint(monkeypatch: pytest.MonkeyPatch):
     ]
 
     monkeypatch.setenv("MCP_TOKEN", "testtoken")
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=alerts_json))
+    monkeypatch.setattr("app.routers.alerts.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=alerts_json))
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get(
-            "/alerts?severity=critical&service=api",
+            "/alerts/?severity=critical&service=api",
             headers={"Authorization": "Bearer testtoken"},
         )
 

@@ -1,7 +1,8 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 
-from app.main import app, _fetch_latency_percentile
+from app.main import app
+from app.routers.metrics import _fetch_latency_percentile
 
 
 class DummyResponse:
@@ -44,7 +45,7 @@ async def test_fetch_latency_success(monkeypatch: pytest.MonkeyPatch):
         }
     }
 
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
+    monkeypatch.setattr("app.routers.metrics.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
 
     latency = await _fetch_latency_percentile(0.95, "5m")
     assert pytest.approx(latency, rel=1e-6) == 0.123
@@ -61,7 +62,7 @@ async def test_metrics_latency_endpoint(monkeypatch: pytest.MonkeyPatch):
     }
 
     monkeypatch.setenv("MCP_TOKEN", "testtoken")
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
+    monkeypatch.setattr("app.routers.metrics.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
