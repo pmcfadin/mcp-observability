@@ -1,9 +1,7 @@
 import os
 
 from fastapi.testclient import TestClient
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from app.main import app  # imported after app instrumentation
 from app.otel_setup import configure_opentelemetry
@@ -34,4 +32,4 @@ def test_health_endpoint_creates_span() -> None:
     assert response.status_code == 200
     spans = exporter.get_finished_spans()
     # At least one span corresponding to the request should exist
-    assert any(span.name == "GET /health" for span in spans) 
+    assert any(span.name == "GET /health" for span in spans)
