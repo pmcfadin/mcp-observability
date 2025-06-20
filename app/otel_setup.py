@@ -13,23 +13,20 @@ testing with the ``InMemorySpanExporter`` provided by
 ``opentelemetry-sdk.testing``.
 """
 
-from typing import Optional
 import os
+from typing import Optional
 
 from fastapi import FastAPI
 
 # OpenTelemetry core
 from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchSpanProcessor,
-    SimpleSpanProcessor,
-)
 
 # Instrumentations
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
 
 # The exporter families are imported lazily inside ``configure_opentelemetry``
 # based on the configured endpoint (gRPC vs HTTP). This avoids unnecessary
@@ -109,7 +106,9 @@ def configure_opentelemetry(
     resource = Resource.create({SERVICE_NAME: "mcp-observability"})
 
     if span_exporter is None:
-        endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4318")
+        endpoint = os.getenv(
+            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4318"
+        )
         span_exporter = _create_default_exporter(endpoint)
 
     tracer_provider = TracerProvider(resource=resource)
@@ -127,4 +126,4 @@ def configure_opentelemetry(
 
     # Future: metrics exporter via Prometheus / OTLP
 
-    app.state.otel_configured = True 
+    app.state.otel_configured = True
