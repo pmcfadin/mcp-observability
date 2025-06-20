@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
@@ -10,7 +10,9 @@ async def test_resources_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/resources", headers={"Authorization": "Bearer testtoken"})
+        response = await ac.get(
+            "/resources", headers={"Authorization": "Bearer testtoken"}
+        )
 
     assert response.status_code == 200
     body = response.json()
@@ -49,4 +51,4 @@ async def test_resource_read():
 
         read_resp = await client.get(f"/resources/{res_id}")
         assert read_resp.status_code == 200
-        assert read_resp.json()["id"] == res_id 
+        assert read_resp.json()["id"] == res_id
