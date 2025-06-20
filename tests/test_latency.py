@@ -24,4 +24,4 @@ def test_health_latency_p95_under_150ms() -> None:
 
     # Calculate 95th percentile using inclusive method
     p95 = sorted(durations)[int(0.95 * len(durations)) - 1]
-    assert p95 < 0.15, f"p95 latency {p95:.3f}s exceeds 150ms" 
+    assert p95 < 0.15, f"p95 latency {p95:.3f}s exceeds 150ms"
