@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
@@ -21,4 +21,4 @@ async def test_prompt_render():
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.post("/prompts/greet/render", json={"name": "Alice"})
         assert resp.status_code == 200
-        assert resp.json()["prompt"].startswith("Hello, Alice") 
+        assert resp.json()["prompt"].startswith("Hello, Alice")

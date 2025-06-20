@@ -1,36 +1,41 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient, Response
+from pytest_httpx import HTTPXMock
 
-from app.main import app, _fetch_latency_percentile
-
-
-class DummyResponse:
-    def __init__(self, status_code: int, json_data: dict):
-        self.status_code = status_code
-        self._json_data = json_data
-
-    def json(self):
-        return self._json_data
-
-
-class DummyClient:
-    """Minimal async context-manager mimicking httpx.AsyncClient."""
-
-    def __init__(self, *, status_code: int = 200, json_data: dict | None = None):
-        self._response = DummyResponse(status_code, json_data or {})
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        return False
-
-    async def get(self, url: str, params=None):
-        return self._response
+from app.clients import PrometheusClient
+from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_fetch_latency_success(monkeypatch: pytest.MonkeyPatch):
+async def test_metrics_latency_endpoint(monkeypatch: pytest.MonkeyPatch):
+    class MockPrometheusClient:
+        async def fetch_latency_percentile(
+            self, percentile: float, time_range: str, service: str | None = None
+        ):
+            return 0.456
+
+    app.dependency_overrides[PrometheusClient] = MockPrometheusClient
+    monkeypatch.setenv("MCP_TOKEN", "testtoken")
+
+    transport = ASGITransport(app=app, raise_app_exceptions=True)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get(
+            "/metrics/latency?percentile=0.95&time_range=5m",
+            headers={"Authorization": "Bearer testtoken"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "percentile": 0.95,
+        "time_range": "5m",
+        "latency_seconds": 0.456,
+    }
+
+    del app.dependency_overrides[PrometheusClient]
+
+
+@pytest.mark.asyncio
+async def test_fetch_latency_percentile(httpx_mock: HTTPXMock):
     fake_json = {
         "data": {
             "result": [
@@ -43,36 +48,12 @@ async def test_fetch_latency_success(monkeypatch: pytest.MonkeyPatch):
             ]
         }
     }
+    httpx_mock.add_response(
+        url="http://prometheus:9090/api/v1/query?query=histogram_quantile%280.95%2C+sum%28rate%28http_server_request_duration_seconds_bucket%5B5m%5D%29%29+by+%28le%29%29",
+        json=fake_json,
+    )
 
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
+    client = PrometheusClient()
+    latency = await client.fetch_latency_percentile(0.95, "5m")
 
-    latency = await _fetch_latency_percentile(0.95, "5m")
     assert pytest.approx(latency, rel=1e-6) == 0.123
-
-
-@pytest.mark.asyncio
-async def test_metrics_latency_endpoint(monkeypatch: pytest.MonkeyPatch):
-    fake_json = {
-        "data": {
-            "result": [
-                {"value": [1718486400, "0.456"]}
-            ]
-        }
-    }
-
-    monkeypatch.setenv("MCP_TOKEN", "testtoken")
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
-
-    transport = ASGITransport(app=app, raise_app_exceptions=True)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get(
-            "/metrics/latency?percentile=0.95&window=5m",
-            headers={"Authorization": "Bearer testtoken"},
-        )
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "percentile": 0.95,
-        "window": "5m",
-        "latency_seconds": 0.456,
-    } 

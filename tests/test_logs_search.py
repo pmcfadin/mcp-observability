@@ -1,54 +1,56 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import Response, ConnectError
+from pytest_httpx import HTTPXMock
 
-from app.main import _search_logs, app
-
-
-class DummyResponse:
-    def __init__(self, json_data):
-        self.status_code = 200
-        self._json = json_data
-
-    def json(self):
-        return self._json
-
-
-class DummyClient:
-    def __init__(self, json_data):
-        self._resp = DummyResponse(json_data)
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        return False
-
-    async def get(self, url, params=None):
-        return self._resp
+from app.clients import LokiClient
 
 
 @pytest.mark.asyncio
-async def test_search_logs_helper(monkeypatch: pytest.MonkeyPatch):
-    fake = {"data": {"result": [{"values": [["1", "found"]]}]}}
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(fake))
+async def test_search_logs(httpx_mock: HTTPXMock):
+    fake_json = {"data": {"result": [{"values": [["1", "match"]]}]}}
+    httpx_mock.add_response(
+        url="http://loki:3100/loki/api/v1/query?query=%7B%7D+%7C%3D+%22match%22&limit=1000",
+        json=fake_json,
+    )
 
-    lines = await _search_logs("error", None, "1h")
-    assert lines == ["found"]
+    client = LokiClient()
+    logs = await client.search_logs("match", None, None)
+
+    assert logs == ["match"]
 
 
 @pytest.mark.asyncio
-async def test_search_logs_endpoint(monkeypatch: pytest.MonkeyPatch):
-    fake = {"data": {"result": [{"values": [["1", "match"]]}]}}
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(fake))
-    monkeypatch.setenv("MCP_TOKEN", "tok")
+async def test_search_logs_loki_unavailable(httpx_mock: HTTPXMock):
+    httpx_mock.add_exception(ConnectError())
 
-    transport = ASGITransport(app=app, raise_app_exceptions=True)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        resp = await ac.post(
-            "/logs/search",
-            json={"query": "match"},
-            headers={"Authorization": "Bearer tok"},
-        )
+    client = LokiClient()
+    with pytest.raises(ConnectError):
+        await client.search_logs("match", None, None)
 
-    assert resp.status_code == 200
-    assert resp.json() == {"logs": ["match"]}
+
+@pytest.mark.asyncio
+async def test_search_logs_loki_error(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=500)
+
+    client = LokiClient()
+    with pytest.raises(Exception):
+        await client.search_logs("match", None, None)
+
+
+@pytest.mark.asyncio
+async def test_search_logs_invalid_payload(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(json={"data": {"invalid": "payload"}})
+
+    client = LokiClient()
+    with pytest.raises(Exception):
+        await client.search_logs("match", None, None)
+
+
+@pytest.mark.asyncio
+async def test_search_logs_no_logs(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(json={"data": {"result": []}})
+
+    client = LokiClient()
+    logs = await client.search_logs("match", None, None)
+
+    assert logs == []
