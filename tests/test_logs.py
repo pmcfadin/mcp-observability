@@ -5,6 +5,7 @@ from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.routers.logs import _fetch_error_logs
+from app.clients import LokiClient
 
 
 class DummyResponse:
@@ -60,16 +61,14 @@ async def test_fetch_error_logs_success(monkeypatch: pytest.MonkeyPatch):
 async def test_logs_errors_endpoint(monkeypatch: pytest.MonkeyPatch):
     """Endpoint returns logs array when provided valid token."""
 
-    fake_json = {
-        "data": {
-            "result": [
-                {"values": [["123", "err one"], ["124", "err two"]]}
-            ]
-        }
-    }
+    class MockLokiClient:
+        async def fetch_error_logs(
+            self, limit: int, service: str | None = None, time_range: str | None = None
+        ):
+            return ["err one", "err two"]
 
+    app.dependency_overrides[LokiClient] = MockLokiClient
     monkeypatch.setenv("MCP_TOKEN", "testtoken")
-    monkeypatch.setattr("app.routers.logs.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -79,4 +78,6 @@ async def test_logs_errors_endpoint(monkeypatch: pytest.MonkeyPatch):
         )
 
     assert response.status_code == 200
-    assert response.json() == {"logs": ["err one", "err two"]} 
+    assert response.json() == {"logs": ["err one", "err two"]}
+
+    del app.dependency_overrides[LokiClient] 
