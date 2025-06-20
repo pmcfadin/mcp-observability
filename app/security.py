@@ -1,9 +1,12 @@
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 
-import os
+from app.config import Settings, get_settings
 
 
-async def verify_bearer_token(authorization: str | None = Header(default=None)) -> None:
+async def verify_bearer_token(
+    authorization: str | None = Header(default=None),
+    settings: Settings = Depends(get_settings),
+) -> None:
     """Validate the Authorization header against the expected token.
 
     The expected token is read from the ``MCP_TOKEN`` environment variable. All
@@ -11,7 +14,7 @@ async def verify_bearer_token(authorization: str | None = Header(default=None)) 
     header is missing, malformed, or the token value does not match.
     """
 
-    expected_token = os.getenv("MCP_TOKEN")
+    expected_token = settings.MCP_TOKEN
 
     # If no expected token is configured, always reject the request. This avoids
     # accidentally deploying an unprotected service.
@@ -32,4 +35,4 @@ async def verify_bearer_token(authorization: str | None = Header(default=None)) 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",
-        ) 
+        )
