@@ -1,5 +1,6 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import ASGITransport, AsyncClient, Response
+from pytest_httpx import HTTPXMock
 
 from app.clients import LokiClient, TempoClient
 from app.main import app
@@ -35,3 +36,31 @@ async def test_trace_endpoints(monkeypatch: pytest.MonkeyPatch):
 
     del app.dependency_overrides[TempoClient]
     del app.dependency_overrides[LokiClient]
+
+
+@pytest.mark.asyncio
+async def test_fetch_trace_json(httpx_mock: HTTPXMock):
+    fake_trace = {"data": {"traceID": "abc"}}
+    httpx_mock.add_response(
+        url="http://tempo:3200/api/traces/abc",
+        json=fake_trace,
+    )
+
+    client = TempoClient()
+    trace = await client.fetch_trace_json("abc")
+
+    assert trace == fake_trace
+
+
+@pytest.mark.asyncio
+async def test_fetch_trace_logs(httpx_mock: HTTPXMock):
+    fake_json = {"data": {"result": [{"values": [["1", "log1"], ["2", "log2"]]}]}}
+    httpx_mock.add_response(
+        url="http://loki:3100/loki/api/v1/query?query=%7Btrace_id%3D%22abc%22%7D&limit=10",
+        json=fake_json,
+    )
+
+    client = LokiClient()
+    logs = await client.fetch_trace_logs("abc", 10)
+
+    assert logs == ["log1", "log2"]

@@ -1,30 +1,21 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import Response
+from pytest_httpx import HTTPXMock
 
 from app.clients import PrometheusClient
-from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_metrics_query_endpoint(monkeypatch: pytest.MonkeyPatch):
-    fake_result = [{"metric": {"__name__": "up"}, "value": [1718486400, "1"]}]
+async def test_execute_promql(httpx_mock: HTTPXMock):
+    fake_json = {
+        "data": {"result": [{"metric": {"__name__": "up"}, "value": [1718486400, "1"]}]}
+    }
+    httpx_mock.add_response(
+        url="http://prometheus:9090/api/v1/query?query=up",
+        json=fake_json,
+    )
 
-    class MockPrometheusClient:
-        async def execute_promql(self, promql: str):
-            return fake_result
+    client = PrometheusClient()
+    result = await client.execute_promql("up")
 
-    app.dependency_overrides[PrometheusClient] = MockPrometheusClient
-    monkeypatch.setenv("MCP_TOKEN", "testtoken")
-
-    transport = ASGITransport(app=app, raise_app_exceptions=True)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post(
-            "/metrics/query",
-            json={"query": "up"},
-            headers={"Authorization": "Bearer testtoken"},
-        )
-
-    assert response.status_code == 200
-    assert response.json() == {"result": fake_result}
-
-    del app.dependency_overrides[PrometheusClient]
+    assert result == fake_json["data"]["result"]
