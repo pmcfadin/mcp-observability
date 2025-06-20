@@ -3,9 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 
 from mcp_observability.schemas import (
+    Capabilities,
     InitializeRequest,
     InitializeResponse,
-    Capabilities,
     ServerInfo,
 )
 
@@ -14,7 +14,9 @@ router = APIRouter(tags=["mcp"], prefix="")  # keep root-level path
 SUPPORTED_VERSION = "2024-11-05"
 
 
-@router.post("/initialize", response_model=InitializeResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/initialize", response_model=InitializeResponse, status_code=status.HTTP_200_OK
+)
 async def initialize(request: InitializeRequest) -> InitializeResponse:  # noqa: D401
     """MCP lifecycle `initialize` handshake (partial spec).
 
@@ -44,4 +46,4 @@ async def initialize(request: InitializeRequest) -> InitializeResponse:  # noqa:
         version=responded_version,
         server=ServerInfo(name="mcp-observability", version="0.1.0"),
         capabilities=server_caps,
-    ) 
+    )

@@ -6,9 +6,8 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
-from mcp_observability.schemas import Resource, ResourcePage
-
 from app.resource_store import get_resource, list_resources, list_templates
+from mcp_observability.schemas import Resource, ResourcePage
 
 router = APIRouter(tags=["mcp"])
 
@@ -66,4 +65,4 @@ async def resources_subscribe():
             yield "\n"
             await asyncio.sleep(15)
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream") 
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
