@@ -20,11 +20,12 @@ from fastapi import FastAPI
 
 # OpenTelemetry core
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 # Instrumentations
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
 
@@ -45,13 +46,7 @@ def _create_default_exporter(endpoint: str):  # pylint: disable=import-outside-t
 
     if endpoint.startswith(("http://", "https://")):
         # HTTP/protobuf exporter
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-            OTLPSpanExporter as OTLPHTTPSpanExporter,
-        )
-
-        # HTTP exporter determines scheme security from endpoint; the HTTP
-        # constructor does not accept an ``insecure`` argument.
-        return OTLPHTTPSpanExporter(endpoint=endpoint)
+        return OTLPSpanExporter(endpoint=endpoint)
 
     # Default gRPC exporter (no scheme)
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
@@ -103,7 +98,13 @@ def configure_opentelemetry(
     # ---------------------------------------------------------------------
     # Provider & exporter setup
     # ---------------------------------------------------------------------
-    resource = Resource.create({SERVICE_NAME: "mcp-observability"})
+    service_name = os.getenv("OTEL_SERVICE_NAME", "mcp-observability")
+
+    resource = Resource.create(
+        attributes={
+            "service.name": service_name,
+        }
+    )
 
     if span_exporter is None:
         endpoint = os.getenv(
