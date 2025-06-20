@@ -1,11 +1,11 @@
 import asyncio
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
+from app.clients import LokiClient
 from app.main import app
 from app.routers.logs import _fetch_error_logs
-from app.clients import LokiClient
 
 
 class DummyResponse:
@@ -51,7 +51,10 @@ async def test_fetch_error_logs_success(monkeypatch: pytest.MonkeyPatch):
         }
     }
 
-    monkeypatch.setattr("app.routers.logs.httpx.AsyncClient", lambda *a, **k: DummyClient(json_data=fake_json))
+    monkeypatch.setattr(
+        "app.routers.logs.httpx.AsyncClient",
+        lambda *a, **k: DummyClient(json_data=fake_json),
+    )
 
     lines = await _fetch_error_logs(10)
     assert lines == ["first error", "second error"]
@@ -80,4 +83,4 @@ async def test_logs_errors_endpoint(monkeypatch: pytest.MonkeyPatch):
     assert response.status_code == 200
     assert response.json() == {"logs": ["err one", "err two"]}
 
-    del app.dependency_overrides[LokiClient] 
+    del app.dependency_overrides[LokiClient]

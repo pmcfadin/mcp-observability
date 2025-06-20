@@ -103,14 +103,12 @@ class PrometheusClient:
             ) from exc
 
     async def fetch_latency_percentile(
-        self, percentile: float, window: str, service: str | None = None
+        self, percentile: float, time_range: str, service: str | None = None
     ) -> float:
         metric = "http_server_request_duration_seconds_bucket"
         if service:
             metric = f'{metric}{{service="{service}"}}'
-        promql = (
-            f"histogram_quantile({percentile}, sum(rate({metric}[{window}])) by (le))"
-        )
+        promql = f"histogram_quantile({percentile}, sum(rate({metric}[{time_range}])) by (le))"
         result = await self._query(promql)
         try:
             return float(result[0]["value"][1])

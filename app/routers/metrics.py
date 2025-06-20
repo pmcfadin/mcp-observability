@@ -19,19 +19,19 @@ router = APIRouter(
 )
 async def metrics_latency(
     percentile: float = Query(0.95, gt=0.0, lt=1.0),
-    window: str = Query("5m", pattern=r"^\d+[smhd]$"),
+    time_range: str = Query("5m", pattern=r"^\d+[smhd]$"),
     service: str | None = Query(None, pattern=r"^[a-zA-Z0-9_-]+$"),
     client: PrometheusClient = Depends(PrometheusClient),
 ) -> dict[str, float | str]:
     """Return latency percentile over window from Prometheus.
 
-    Example: `/metrics/latency?percentile=0.99&window=1m`
+    Example: `/metrics/latency?percentile=0.99&time_range=1m`
     """
 
-    latency = await client.fetch_latency_percentile(percentile, window, service)
+    latency = await client.fetch_latency_percentile(percentile, time_range, service)
     return {
         "percentile": percentile,
-        "window": window,
+        "time_range": time_range,
         "latency_seconds": latency,
         **({"service": service} if service else {}),
     }

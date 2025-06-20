@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
@@ -18,4 +18,4 @@ async def test_health_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"} 
+    assert response.json() == {"status": "ok"}

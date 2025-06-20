@@ -1,6 +1,7 @@
 import asyncio
 import os
 import random
+import ssl
 import subprocess
 import sys
 import time
@@ -9,7 +10,6 @@ from pathlib import Path
 import pytest
 import trustme
 from httpx import AsyncClient
-import ssl
 
 TOKEN = "secret"
 
@@ -145,7 +145,9 @@ async def test_mutual_tls_success(tmp_path: Path) -> None:
 
         ssl_context = ssl.create_default_context(cafile=str(ca_cert_file))
         # Present client cert for mutual TLS
-        ssl_context.load_cert_chain(certfile=str(client_cert_file), keyfile=str(client_key_file))
+        ssl_context.load_cert_chain(
+            certfile=str(client_cert_file), keyfile=str(client_key_file)
+        )
 
         async with AsyncClient(verify=ssl_context) as ac:
             response = await ac.get(
@@ -157,4 +159,4 @@ async def test_mutual_tls_success(tmp_path: Path) -> None:
         assert response.json() == {"status": "ok"}
     finally:
         proc.terminate()
-        proc.wait() 
+        proc.wait()

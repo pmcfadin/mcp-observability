@@ -27,7 +27,9 @@ async def test_trace_endpoints(monkeypatch: pytest.MonkeyPatch):
         assert trace.status_code == 200
         assert trace.json() == fake_trace
 
-        logs_resp = await ac.get("/traces/abc/logs", headers={"Authorization": "Bearer tok"})
+        logs_resp = await ac.get(
+            "/traces/abc/logs", headers={"Authorization": "Bearer tok"}
+        )
         assert logs_resp.status_code == 200
         assert logs_resp.json() == {"logs": ["l1"]}
 
