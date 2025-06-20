@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import types
 from logging import getLogger
 from typing import AsyncIterator
-import types
 
 import grpc
 
@@ -58,4 +58,4 @@ def serve(port: int = 50051) -> None:  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover
-    serve() 
+    serve()

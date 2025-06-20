@@ -1,8 +1,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.main import app
 from app.initialize import SUPPORTED_VERSION
+from app.main import app
 
 
 @pytest.mark.asyncio
@@ -14,4 +14,4 @@ async def test_manifest():
         data = resp.json()
         assert data["version"] == SUPPORTED_VERSION
         assert "resources" in data and isinstance(data["resources"], list)
-        assert "prompts" in data and isinstance(data["prompts"], list) 
+        assert "prompts" in data and isinstance(data["prompts"], list)

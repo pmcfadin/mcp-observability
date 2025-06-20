@@ -1,9 +1,14 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
-
-from mcp_observability.schemas import Message, MessageContent, MessageContentType, MessageRole, SamplingRequest
+from mcp_observability.schemas import (
+    Message,
+    MessageContent,
+    MessageContentType,
+    MessageRole,
+    SamplingRequest,
+)
 
 
 @pytest.mark.asyncio
@@ -49,4 +54,4 @@ async def test_sampling_echo():
         }
         resp = await client.post("/sampling", json=req)
         assert resp.status_code == 200
-        assert resp.json()["content"]["text"] == "HELLO" 
+        assert resp.json()["content"]["text"] == "HELLO"
