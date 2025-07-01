@@ -1,7 +1,8 @@
 import asyncio
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import ASGITransport, AsyncClient, Response
+from pytest_httpx import HTTPXMock
 
 from app.clients import LokiClient
 from app.main import app
@@ -35,9 +36,7 @@ class DummyClient:
 
 
 @pytest.mark.asyncio
-async def test_fetch_error_logs_success(monkeypatch: pytest.MonkeyPatch):
-    """Helper should return parsed log lines from Loki JSON payload."""
-
+async def test_fetch_error_logs(httpx_mock: HTTPXMock):
     fake_json = {
         "data": {
             "result": [
@@ -50,14 +49,15 @@ async def test_fetch_error_logs_success(monkeypatch: pytest.MonkeyPatch):
             ]
         }
     }
-
-    monkeypatch.setattr(
-        "app.routers.logs.httpx.AsyncClient",
-        lambda *a, **k: DummyClient(json_data=fake_json),
+    httpx_mock.add_response(
+        url="http://loki:3100/loki/api/v1/query?query=%7Blevel%3D%22error%22%7D&limit=10",
+        json=fake_json,
     )
 
-    lines = await _fetch_error_logs(10)
-    assert lines == ["first error", "second error"]
+    client = LokiClient()
+    logs = await client.fetch_error_logs(10)
+
+    assert logs == ["first error", "second error"]
 
 
 @pytest.mark.asyncio

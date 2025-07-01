@@ -1,30 +1,19 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import Response
+from pytest_httpx import HTTPXMock
 
 from app.clients import LokiClient
-from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_search_logs_endpoint(monkeypatch: pytest.MonkeyPatch):
-    class MockLokiClient:
-        async def search_logs(
-            self, query: str, service: str | None, time_range: str | None
-        ):
-            return ["match"]
+async def test_search_logs(httpx_mock: HTTPXMock):
+    fake_json = {"data": {"result": [{"values": [["1", "match"]]}]}}
+    httpx_mock.add_response(
+        url="http://loki:3100/loki/api/v1/query?query=%7B%7D+%7C%3D+%22match%22&limit=1000",
+        json=fake_json,
+    )
 
-    app.dependency_overrides[LokiClient] = MockLokiClient
-    monkeypatch.setenv("MCP_TOKEN", "tok")
+    client = LokiClient()
+    logs = await client.search_logs("match", None, None)
 
-    transport = ASGITransport(app=app, raise_app_exceptions=True)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        resp = await ac.post(
-            "/logs/search",
-            json={"query": "match"},
-            headers={"Authorization": "Bearer tok"},
-        )
-
-    assert resp.status_code == 200
-    assert resp.json() == {"logs": ["match"]}
-
-    del app.dependency_overrides[LokiClient]
+    assert logs == ["match"]
