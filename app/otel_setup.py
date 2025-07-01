@@ -19,15 +19,18 @@ from typing import Optional
 from fastapi import FastAPI
 
 # OpenTelemetry core
-from opentelemetry import trace
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 # Instrumentations
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 # The exporter families are imported lazily inside ``configure_opentelemetry``
 # based on the configured endpoint (gRPC vs HTTP). This avoids unnecessary
@@ -58,46 +61,9 @@ def _create_default_exporter(endpoint: str):  # pylint: disable=import-outside-t
     return OTLPGRPCSpanExporter(endpoint=endpoint, insecure=True)
 
 
-def configure_opentelemetry(
-    app: FastAPI,
-    *,
-    span_exporter=None,
-    use_simple_processor: bool = False,
-    reconfigure: bool = False,
-) -> None:
-    """Configure tracing for *app* if not already configured.
+def configure_opentelemetry(app: FastAPI) -> None:
+    """Configure OpenTelemetry for the FastAPI application."""
 
-    Args:
-        app: The FastAPI application to instrument.
-        span_exporter: Optional *SpanExporter* instance. When omitted, an OTLP
-            exporter is created based on environment variables.
-        use_simple_processor: When *True*, a ``SimpleSpanProcessor`` is used in
-            place of the default ``BatchSpanProcessor``. This is handy for
-            deterministic unit tests.
-        reconfigure: Force reconfiguration even if instrumentation appears to
-            have been done previously. This is primarily for test scenarios.
-    """
-
-    # Bail out if instrumentation already applied (unless caller forces it).
-    if getattr(app.state, "otel_configured", False) and not reconfigure:
-        return
-
-    # Detach any previous instrumentation to avoid duplicate spans in tests.
-    if reconfigure:
-        try:
-            FastAPIInstrumentor().uninstrument_app(app)
-        except Exception:  # pragma: no cover  # noqa: BLE001
-            pass
-
-        # Starlette prevents adding middleware after the application has
-        # started once (middleware_stack built). Reset the attribute so that
-        # re-instrumentation via ``instrument_app`` can run during tests.
-        if hasattr(app, "middleware_stack"):
-            app.middleware_stack = None  # type: ignore[attr-defined]
-
-    # ---------------------------------------------------------------------
-    # Provider & exporter setup
-    # ---------------------------------------------------------------------
     service_name = os.getenv("OTEL_SERVICE_NAME", "mcp-observability")
 
     resource = Resource.create(
@@ -106,25 +72,21 @@ def configure_opentelemetry(
         }
     )
 
-    if span_exporter is None:
-        endpoint = os.getenv(
-            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4318"
-        )
-        span_exporter = _create_default_exporter(endpoint)
-
+    # Set up trace provider
     tracer_provider = TracerProvider(resource=resource)
-    processor_cls = SimpleSpanProcessor if use_simple_processor else BatchSpanProcessor
-    tracer_provider.add_span_processor(processor_cls(span_exporter))
-
-    # Set global tracer provider *before* instrumentation.
     trace.set_tracer_provider(tracer_provider)
 
-    # ------------------------------------------------------------------
-    # Instrumentations
-    # ------------------------------------------------------------------
-    FastAPIInstrumentor().instrument_app(app, tracer_provider=tracer_provider)
-    HTTPXClientInstrumentor().instrument(tracer_provider=tracer_provider)
+    # Use OTLP exporter over HTTP
+    # Assumes collector is running at http://otel-collector:4318/v1/traces
+    span_exporter = OTLPSpanExporter()
+    tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
 
-    # Future: metrics exporter via Prometheus / OTLP
+    # Set up meter provider
+    metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
+    meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+    metrics.set_meter_provider(meter_provider)
 
-    app.state.otel_configured = True
+    # Auto-instrument FastAPI
+    FastAPIInstrumentor.instrument_app(
+        app, tracer_provider=tracer_provider, meter_provider=meter_provider
+    )
