@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from httpx import ASGITransport, AsyncClient, Response
+from httpx import ASGITransport, AsyncClient, Response, ConnectError
 from pytest_httpx import HTTPXMock
 
 from app.clients import LokiClient
@@ -58,6 +58,43 @@ async def test_fetch_error_logs(httpx_mock: HTTPXMock):
     logs = await client.fetch_error_logs(10)
 
     assert logs == ["first error", "second error"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_error_logs_loki_unavailable(httpx_mock: HTTPXMock):
+    httpx_mock.add_exception(ConnectError())
+
+    client = LokiClient()
+    with pytest.raises(ConnectError):
+        await client.fetch_error_logs(10)
+
+
+@pytest.mark.asyncio
+async def test_fetch_error_logs_loki_error(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=500)
+
+    client = LokiClient()
+    with pytest.raises(Exception):
+        await client.fetch_error_logs(10)
+
+
+@pytest.mark.asyncio
+async def test_fetch_error_logs_invalid_payload(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(json={"data": {"invalid": "payload"}})
+
+    client = LokiClient()
+    with pytest.raises(Exception):
+        await client.fetch_error_logs(10)
+
+
+@pytest.mark.asyncio
+async def test_fetch_error_logs_no_logs(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(json={"data": {"result": []}})
+
+    client = LokiClient()
+    logs = await client.fetch_error_logs(10)
+
+    assert logs == []
 
 
 @pytest.mark.asyncio
