@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.clients import PrometheusClient
 from app.main import app
@@ -27,4 +27,4 @@ async def test_metrics_query_endpoint(monkeypatch: pytest.MonkeyPatch):
     assert response.status_code == 200
     assert response.json() == {"result": fake_result}
 
-    del app.dependency_overrides[PrometheusClient] 
+    del app.dependency_overrides[PrometheusClient]

@@ -1,5 +1,5 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.clients import AlertManagerClient
 from app.main import app
@@ -12,7 +12,9 @@ async def test_alerts_endpoint(monkeypatch: pytest.MonkeyPatch):
     ]
 
     class MockAlertManagerClient:
-        async def fetch_active_alerts(self, severity: str | None = None, service: str | None = None):
+        async def fetch_active_alerts(
+            self, severity: str | None = None, service: str | None = None
+        ):
             return alerts_json
 
     app.dependency_overrides[AlertManagerClient] = MockAlertManagerClient
@@ -29,4 +31,4 @@ async def test_alerts_endpoint(monkeypatch: pytest.MonkeyPatch):
     assert resp.status_code == 200
     assert resp.json() == {"alerts": alerts_json}
 
-    del app.dependency_overrides[AlertManagerClient] 
+    del app.dependency_overrides[AlertManagerClient]

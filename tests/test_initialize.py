@@ -1,6 +1,5 @@
 import pytest
-from httpx import AsyncClient
-from httpx import ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
@@ -36,4 +35,4 @@ async def test_initialize_version_mismatch():
         assert resp.status_code == 200
         data = resp.json()
         # Server responds with supported version
-        assert data["version"] == "2024-11-05" 
+        assert data["version"] == "2024-11-05"

@@ -1,11 +1,13 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_unauthorized_when_header_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_unauthorized_when_header_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Request without Authorization header should be rejected with 401."""
 
     monkeypatch.setenv("MCP_TOKEN", "secret")
@@ -30,4 +32,4 @@ async def test_unauthorized_when_token_invalid(monkeypatch: pytest.MonkeyPatch) 
             headers={"Authorization": "Bearer wrongtoken"},
         )
 
-    assert response.status_code == 401 
+    assert response.status_code == 401

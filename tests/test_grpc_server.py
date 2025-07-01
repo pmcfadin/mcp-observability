@@ -16,7 +16,9 @@ async def test_observability_servicer_uppercase(monkeypatch):
         def __init__(self, reply: str):
             self.reply = reply
 
-    fake_pb2 = types.SimpleNamespace(SampleRequest=_FakeRequest, SampleResponse=_FakeResponse)
+    fake_pb2 = types.SimpleNamespace(
+        SampleRequest=_FakeRequest, SampleResponse=_FakeResponse
+    )
     fake_pb2_grpc = types.SimpleNamespace(ObservabilityServiceServicer=object)
 
     monkeypatch.setattr(gs, "pb2", fake_pb2, raising=False)
@@ -27,4 +29,4 @@ async def test_observability_servicer_uppercase(monkeypatch):
     # Context not used; pass None
     response = await servicer.Sample(request, None)
 
-    assert response.reply == "HELLO" 
+    assert response.reply == "HELLO"
