@@ -1,7 +1,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.main import _search_logs, app
+from app.main import app
+from app.routers.logs import _search_logs
 
 
 class DummyResponse:
@@ -30,7 +31,7 @@ class DummyClient:
 @pytest.mark.asyncio
 async def test_search_logs_helper(monkeypatch: pytest.MonkeyPatch):
     fake = {"data": {"result": [{"values": [["1", "found"]]}]}}
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(fake))
+    monkeypatch.setattr("app.routers.logs.httpx.AsyncClient", lambda *a, **k: DummyClient(fake))
 
     lines = await _search_logs("error", None, "1h")
     assert lines == ["found"]
@@ -39,7 +40,7 @@ async def test_search_logs_helper(monkeypatch: pytest.MonkeyPatch):
 @pytest.mark.asyncio
 async def test_search_logs_endpoint(monkeypatch: pytest.MonkeyPatch):
     fake = {"data": {"result": [{"values": [["1", "match"]]}]}}
-    monkeypatch.setattr("app.main.httpx.AsyncClient", lambda *a, **k: DummyClient(fake))
+    monkeypatch.setattr("app.routers.logs.httpx.AsyncClient", lambda *a, **k: DummyClient(fake))
     monkeypatch.setenv("MCP_TOKEN", "tok")
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
