@@ -1,19 +1,21 @@
-import os
 from typing import Any, List
 
 import httpx
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
+
+from app.config import Settings, get_settings
 
 
 class LokiClient:
-    def __init__(self, base_url: str | None = None):
-        self.base_url = base_url or os.getenv("LOKI_BASE_URL", "http://loki:3100")
+    def __init__(self, settings: Settings = Depends(get_settings)):
+        self.base_url = settings.LOKI_BASE_URL
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
 
     async def _query(self, query: str, limit: int = 1000) -> List[str]:
         url = f"{self.base_url.rstrip('/')}/loki/api/v1/query"
         params = {"query": query, "limit": str(limit)}
 
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.get(url, params=params)
             except httpx.HTTPError as exc:
@@ -69,16 +71,15 @@ class LokiClient:
 
 
 class PrometheusClient:
-    def __init__(self, base_url: str | None = None):
-        self.base_url = base_url or os.getenv(
-            "PROMETHEUS_BASE_URL", "http://prometheus:9090"
-        )
+    def __init__(self, settings: Settings = Depends(get_settings)):
+        self.base_url = settings.PROMETHEUS_BASE_URL
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
 
     async def _query(self, promql: str) -> Any:
         url = f"{self.base_url.rstrip('/')}/api/v1/query"
         params = {"query": promql}
 
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.get(url, params=params)
             except httpx.HTTPError as exc:
@@ -124,12 +125,13 @@ class PrometheusClient:
 
 
 class TempoClient:
-    def __init__(self, base_url: str | None = None):
-        self.base_url = base_url or os.getenv("TEMPO_BASE_URL", "http://tempo:3200")
+    def __init__(self, settings: Settings = Depends(get_settings)):
+        self.base_url = settings.TEMPO_BASE_URL
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
 
     async def fetch_trace_json(self, trace_id: str) -> Any:
         url = f"{self.base_url.rstrip('/')}/api/traces/{trace_id}"
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.get(url)
             except httpx.HTTPError as exc:
@@ -146,16 +148,15 @@ class TempoClient:
 
 
 class AlertManagerClient:
-    def __init__(self, base_url: str | None = None):
-        self.base_url = base_url or os.getenv(
-            "ALERTMANAGER_BASE_URL", "http://alertmanager:9093"
-        )
+    def __init__(self, settings: Settings = Depends(get_settings)):
+        self.base_url = settings.ALERTMANAGER_BASE_URL
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
 
     async def fetch_active_alerts(
         self, severity: str | None = None, service: str | None = None
     ) -> list[dict[str, Any]]:
         url = f"{self.base_url.rstrip('/')}/api/v2/alerts"
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.get(url)
             except httpx.HTTPError as exc:
