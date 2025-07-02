@@ -31,6 +31,8 @@ jobs:
           poetry run mypy app
 
       - name: Test with coverage
+        env:
+          OTEL_SDK_DISABLED: "true"
         run: |
           poetry run pytest --cov=app --cov=app --cov-fail-under=90 -q
 
