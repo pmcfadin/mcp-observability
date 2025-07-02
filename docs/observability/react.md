@@ -89,4 +89,4 @@ Paste into your chosen agent to automate the code changes.
 |---------|--------------|-----|
 | `No trace exporter configured` in console | `telemetry.js` imported after ReactDOM render | Ensure import comes first |
 | Network errors 403 | Wrong `mcp-token` | Verify token matches `mcp-server` secret |
-| CORS preflight fails | Collector endpoint blocking origin | Allow origin or proxy through backend | 
+| CORS preflight fails | Collector endpoint blocking origin | Allow origin or proxy through backend |

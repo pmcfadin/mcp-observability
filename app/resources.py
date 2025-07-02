@@ -34,7 +34,7 @@ async def resources_list(
     return ResourcePage(
         resources=page_items,
         templates=list_templates() if cursor == 0 else None,
-        nextCursor=next_cursor,  # type: ignore[arg-type]
+        next_cursor=next_cursor,
     )
 
 

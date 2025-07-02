@@ -166,4 +166,4 @@ Place the snippet in `scripts/close_epics.sh`, `chmod +x` it, and schedule it vi
 
 ---
 
-*Last updated: 18 Jun 2025* 
+*Last updated: 18 Jun 2025*

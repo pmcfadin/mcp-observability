@@ -87,7 +87,7 @@ docker compose -f mcp-obs.yml down -v          # stop & delete volumes (data los
 
 * **Ports already in use** – adjust the ports in `mcp-obs.yml` or stop the conflicting services.
 * **Certificate warnings** – the stack uses self-signed TLS certificates; pass `-k` to `curl` or import `certs/ca.crt` into your browser.
-* **No dashboards** – ensure `./grafana/provisioning` and `./grafana/dashboards` are mounted (default). 
+* **No dashboards** – ensure `./grafana/provisioning` and `./grafana/dashboards` are mounted (default).
 
 ## Local Development Workflow
 
@@ -230,4 +230,4 @@ If the value exceeds your SLA, your script/bot can call `/alerts` or post to Sla
 docker compose -f mcp-obs.yml down -v   # removes containers & named volumes
 ```
 
-⚠️ `-v` deletes Prometheus / Loki data stored in named volumes. Omit if you want to keep test data. 
+⚠️ `-v` deletes Prometheus / Loki data stored in named volumes. Omit if you want to keep test data.

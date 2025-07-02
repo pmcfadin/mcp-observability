@@ -109,4 +109,4 @@ Use the *Tempo / Jaeger* data source in Grafana (pre-configured) to see spans an
 ## 7 · Troubleshooting
 
 * **CORS errors** – the collector container listens on `0.0.0.0` and includes permissive CORS headers. If you proxy via nginx/etc., ensure CORS is propagated.
-* **Large bundle size** – load OTLP libraries dynamically or leverage tree-shaking to keep the client bundle small. 
+* **Large bundle size** – load OTLP libraries dynamically or leverage tree-shaking to keep the client bundle small.

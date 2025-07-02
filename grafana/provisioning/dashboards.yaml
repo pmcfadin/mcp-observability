@@ -8,4 +8,4 @@ providers:
     editable: false
     updateIntervalSeconds: 600
     options:
-      path: /var/lib/grafana/dashboards 
+      path: /var/lib/grafana/dashboards

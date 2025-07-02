@@ -32,4 +32,4 @@ dependencies:
   - name: opentelemetry-collector
     version: "0.*"
     repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
-    condition: otelCollector.enabled 
+    condition: otelCollector.enabled

@@ -107,4 +107,4 @@ Combine in one go:
 | `Address already in use :8000` | Another process is binding the port – change it in `app/main.py` or stop the other app. |
 | Tests failing with TLS errors | Delete `certs/` and restart Compose to regenerate the self-signed CA. |
 
-If you get stuck open an issue or ask in the project chat – we're happy to help! 
+If you get stuck open an issue or ask in the project chat – we're happy to help!

@@ -34,14 +34,14 @@ flowchart TD
 
 ## Monitoring Builds
 
-1. **GitHub → Actions tab**  
-   • Each workflow has its own entry. A colored icon (✔️ / ❌ / ⏳) shows status.  
+1. **GitHub → Actions tab**
+   • Each workflow has its own entry. A colored icon (✔️ / ❌ / ⏳) shows status.
    • Click into a run to view step-by-step logs and artifacts.
 
-2. **Pull-Request Checks**  
+2. **Pull-Request Checks**
    • PRs display required checks near the bottom. A red ❌ blocks merge until fixed.
 
-3. **GitHub CLI**  
+3. **GitHub CLI**
    ```bash
    gh run list --limit 20 | cat          # Recent runs
    gh run view <run-id> --log | less     # Live logs
@@ -81,18 +81,18 @@ RUN_ID=$(gh run list -s failure -L 1 --json databaseId -q '.[0].databaseId')
 gh run rerun $RUN_ID
 ```
 
-1. **Push a Fix** — most issues are resolved by committing corrective code.  
-2. **Rerun Failed Jobs** — if the failure was transient (network glitch, etc.).  
+1. **Push a Fix** — most issues are resolved by committing corrective code.
+2. **Rerun Failed Jobs** — if the failure was transient (network glitch, etc.).
 3. **Seek Help** — comment `❗ Need input` on the relevant issue / PR.
 
 ---
 
 ## Where to Extend the Pipeline
 
-* **Add a new stage:** create another YAML file in `.github/workflows/` or append a job to an existing one.  
-* **Persist artifacts:** use `actions/upload-artifact@v4`.  
+* **Add a new stage:** create another YAML file in `.github/workflows/` or append a job to an existing one.
+* **Persist artifacts:** use `actions/upload-artifact@v4`.
 * **Publish images or charts:** follow the pattern in existing workflows (login → build → push).
 
 ---
 
-_Last updated: 17 Jun 2025_ 
+_Last updated: 17 Jun 2025_

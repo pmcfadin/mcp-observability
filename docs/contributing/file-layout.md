@@ -43,4 +43,4 @@ This page drills down into the **directory structure** of the repository and hig
 3. **CI** – GitHub Actions lint & test on every push; drift check ensures Compose ≙ Helm.
 4. **Deploy** – `helm install` or update Compose file → same container images run anywhere.
 
-For a full architectural overview see `architecture-overview.md`. 
+For a full architectural overview see `architecture-overview.md`.

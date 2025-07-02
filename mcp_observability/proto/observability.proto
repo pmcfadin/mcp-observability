@@ -17,4 +17,4 @@ message SampleRequest {
 
 message SampleResponse {
   string reply = 1;
-} 
+}

@@ -71,4 +71,4 @@ Paste the prompt into your agent to auto-apply the changes.
 |---------|-------|-----|
 | `NoClassDefFoundError` on startup | Path to agent JAR | Verify `JAVA_TOOL_OPTIONS` points to correct file |
 | Spans missing | Endpoint & port | Confirm collector is reachable and headers include token |
-| High memory | Agent sampling | Adjust `OTEL_TRACES_SAMPLER_ARG` or disable logs | 
+| High memory | Agent sampling | Adjust `OTEL_TRACES_SAMPLER_ARG` or disable logs |

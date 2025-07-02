@@ -20,4 +20,4 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "mcp-obs.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "mcp-obs.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end -}} 
+{{- end -}}

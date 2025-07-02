@@ -111,4 +111,4 @@ opentelemetry-instrument \
 
 Paste this into your preferred agent (e.g. Cursor, Claude) to auto-patch the service.
 
---- 
+---

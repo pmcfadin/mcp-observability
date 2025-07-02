@@ -29,4 +29,4 @@ for EPIC in $EPICS; do
   echo "---"
 done
 
-echo "🏁  Finished housekeeping." 
+echo "🏁  Finished housekeeping."

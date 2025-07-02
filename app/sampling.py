@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -91,7 +91,7 @@ async def sampling_endpoint(request: SamplingRequest) -> SamplingResponse:
 
             rsp = openai.chat.completions.create(  # type: ignore[attr-defined]
                 model=_OPENAI_MODEL,
-                messages=oa_messages,
+                messages=cast(Any, oa_messages),
                 temperature=request.temperature or 0.7,
                 max_tokens=request.max_tokens,
                 stop=request.stop_sequences,
@@ -113,11 +113,10 @@ async def sampling_endpoint(request: SamplingRequest) -> SamplingResponse:
     first_user_msg = next(
         (m for m in request.messages if m.role == MessageRole.user), None
     )
-    reply_text = (
-        first_user_msg.content.text.upper()
-        if isinstance(first_user_msg, Message)
-        else "OK"
-    )
+    if isinstance(first_user_msg, Message) and first_user_msg.content.text:
+        reply_text = first_user_msg.content.text.upper()
+    else:
+        reply_text = "OK"
 
     return SamplingResponse(
         model="mock",

@@ -8,8 +8,8 @@ from typing import AsyncIterator
 import grpc
 
 try:
-    from app import observability_pb2 as pb2  # generated file path
-    from app import observability_pb2_grpc as pb2_grpc
+    from app import observability_pb2 as pb2  # type: ignore[attr-defined]
+    from app import observability_pb2_grpc as pb2_grpc  # type: ignore[attr-defined]
 except ImportError:  # pragma: no cover
     # Stubs not generated; server cannot start. This is acceptable in CI until
     # compile step runs. A warning is logged instead of crashing import time.

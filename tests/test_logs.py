@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from httpx import ASGITransport, AsyncClient, Response, ConnectError
+from httpx import ASGITransport, AsyncClient, ConnectError, Response
 from pytest_httpx import HTTPXMock
 
 from app.clients import LokiClient

@@ -102,4 +102,4 @@ Paste into Cursor or Claude to auto-modify your repo.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `ReferenceError: window` during build | Client tracer imported on server | Import only in browser (see `_app.tsx`) |
-| Spans dropped | CORS block | Add OTLP endpoint domain to allowed origins | 
+| Spans dropped | CORS block | Add OTLP endpoint domain to allowed origins |

@@ -2,4 +2,4 @@
 
 _This page will collect common contributor questions._
 
-*Coming soon.* 
+*Coming soon.*

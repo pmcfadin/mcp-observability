@@ -132,4 +132,4 @@ Everything needed for the write-up is fetched programmatically via the MCP API, 
 
 * Automate image pulls via GitHub Actions or ArgoCD.
 * Add Prometheus alert rules that fire when MCP endpoints start timing out.
-* Configure Grafana dashboards (JSON files in `grafana/dashboards/`) to point at your real data sources. 
+* Configure Grafana dashboards (JSON files in `grafana/dashboards/`) to point at your real data sources.

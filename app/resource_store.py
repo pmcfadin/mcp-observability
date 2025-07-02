@@ -38,13 +38,13 @@ def list_templates() -> List[ResourceTemplate]:
 
     templates: List[ResourceTemplate] = [
         ResourceTemplate(
-            uriTemplate="loki://query{?expr}",
+            uri_template="loki://query{?expr}",
             name="Loki query expression",
             description="Execute a Loki log query using the provided expr parameter.",
             mimeType="application/json",
         ),
         ResourceTemplate(
-            uriTemplate="runbook://{slug}",
+            uri_template="runbook://{slug}",
             name="Operational runbook markdown",
             description="Markdown runbook located under docs/runbooks/.",
             mimeType="text/markdown",

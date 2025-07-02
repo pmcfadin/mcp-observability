@@ -91,4 +91,4 @@ Adjust based on ingest volume & retention.
 
 ---
 
-Need more help? Open an issue referencing this guide with logs & configuration for quicker assistance. 
+Need more help? Open an issue referencing this guide with logs & configuration for quicker assistance.

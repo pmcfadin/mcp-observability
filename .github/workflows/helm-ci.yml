@@ -35,4 +35,4 @@ jobs:
 
       - name: Template chart and validate manifests
         run: |
-          helm template mcp charts/mcp-obs | kubeval --strict --ignore-missing-schemas 
+          helm template mcp charts/mcp-obs | kubeval --strict --ignore-missing-schemas

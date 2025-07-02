@@ -3,4 +3,4 @@ template: "Hello, {{name}}!"
 inputVariables:
   - name
 metadata:
-  category: examples 
+  category: examples

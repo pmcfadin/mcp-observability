@@ -2,8 +2,8 @@
 
 **MCP Observability** gives your AI agents—and you—a single HTTPS endpoint to explore logs, metrics and traces for any application, without learning half-a-dozen vendor APIs.
 
-•   Standards-based: OpenTelemetry ingestion, Grafana/Loki/Tempo storage  
-•   AI-ready: implements the Model-Context-Protocol (MCP) so agents can ask natural-language questions about performance issues  
+•   Standards-based: OpenTelemetry ingestion, Grafana/Loki/Tempo storage
+•   AI-ready: implements the Model-Context-Protocol (MCP) so agents can ask natural-language questions about performance issues
 •   Zero-lock-in: self-host via Docker Compose, Kubernetes (Helm) or any cloud container platform
 
 ---

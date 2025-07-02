@@ -24,4 +24,4 @@ spec:
             severity: critical
           annotations:
             summary: "High HTTP error rate detected"
-            description: "Error rate exceeded 5 % for the last 5 minutes." 
+            description: "Error rate exceeded 5 % for the last 5 minutes."

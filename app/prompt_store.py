@@ -58,7 +58,7 @@ def render_prompt(prompt: Prompt, args: Dict[str, str]) -> str:
     if missing:
         raise ValueError(f"Missing variables: {', '.join(missing)}")
 
-    env = Environment(loader=BaseLoader, autoescape=False)
+    env = Environment(loader=BaseLoader(), autoescape=False)
     try:
         template = env.from_string(prompt.template)
         return template.render(**args)

@@ -102,4 +102,4 @@ Search Tempo traces by `service.name="my-go-service"`.
 | Symptom | Cause | Fix |
 |---------|------|-----|
 | exporter connection refused | Wrong collector address | Verify endpoint reachable from service |
-| missing spans | tracer not set | Ensure `otel.SetTracerProvider` called before creating spans | 
+| missing spans | tracer not set | Ensure `otel.SetTracerProvider` called before creating spans |

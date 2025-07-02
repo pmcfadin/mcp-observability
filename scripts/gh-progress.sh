@@ -21,4 +21,4 @@ GH_MESSAGE="${EMOJI} ${MESSAGE}"
 
 gh issue comment "$ISSUE_NUMBER" --body "$GH_MESSAGE"
 
-echo "Commented on issue #$ISSUE_NUMBER: $GH_MESSAGE" 
+echo "Commented on issue #$ISSUE_NUMBER: $GH_MESSAGE"

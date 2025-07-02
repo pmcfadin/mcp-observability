@@ -66,4 +66,4 @@ trusted clusters or API gateways.
 
 * Store the bearer token and TLS key material in Kubernetes Secrets or a
   dedicated secret-manager (Vault, AWS Secrets Manager, …).
-* Never commit real certificates or tokens to version control. 
+* Never commit real certificates or tokens to version control.

@@ -26,4 +26,4 @@ service:
       exporters: [otlp/tempo]
     logs:
       receivers: [filelog]
-      exporters: [loki] 
+      exporters: [loki]

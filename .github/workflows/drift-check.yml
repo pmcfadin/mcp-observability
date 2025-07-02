@@ -23,4 +23,4 @@ jobs:
         run: pip install PyYAML
 
       - name: Run drift check
-        run: python scripts/ci/check_drift.py 
+        run: python scripts/ci/check_drift.py

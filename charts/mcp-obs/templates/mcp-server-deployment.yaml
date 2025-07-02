@@ -72,4 +72,4 @@ spec:
         - name: tls
           secret:
             secretName: {{ .Values.tls.secretName }}
-        {{- end }} 
+        {{- end }}

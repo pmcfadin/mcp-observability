@@ -81,4 +81,4 @@ Query by `service.name="my-node-app"` under *Traces ▸ Services*.
 | Symptom | Cause | Fix |
 |---------|------|-----|
 | `DiagConsoleLogger` warns exporter unreachable | Wrong URL/firewall | Verify collector endpoint & port 4318 open |
-| No spans for DB queries | Package not auto-instrumented | Import specific instrumentation package (e.g. `@opentelemetry/instrumentation-mongodb`) | 
+| No spans for DB queries | Package not auto-instrumented | Import specific instrumentation package (e.g. `@opentelemetry/instrumentation-mongodb`) |

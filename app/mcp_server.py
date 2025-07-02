@@ -2,8 +2,8 @@ from typing import Any, List
 
 from mcp.server.fastmcp import FastMCP
 
+from app.main import _fetch_error_logs  # type: ignore[attr-defined]
 from app.main import (
-    _fetch_error_logs,
     _fetch_latency_percentile,
     _fetch_trace_json,
     _fetch_trace_logs,
@@ -80,7 +80,7 @@ async def logs_search_tool(query: str, service: str | None = None, range: str | 
 
 @mcp.tool(description="Execute PromQL query and return raw result list")
 async def metrics_query(query: str) -> Any:  # type: ignore[override]
-    from app.main import _execute_promql
+    from app.main import _execute_promql  # type: ignore[attr-defined]
 
     return await _execute_promql(query)
 
@@ -92,7 +92,7 @@ async def metrics_query(query: str) -> Any:  # type: ignore[override]
     description="Return active alerts from Alertmanager filtered by severity/service"
 )
 async def alerts_tool(severity: str | None = None, service: str | None = None) -> list[dict[str, Any]]:  # type: ignore[override]
-    from app.main import _fetch_active_alerts
+    from app.main import _fetch_active_alerts  # type: ignore[attr-defined]
 
     return await _fetch_active_alerts(severity, service)
 

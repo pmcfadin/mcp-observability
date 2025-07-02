@@ -58,4 +58,4 @@ fi
 ls -l "$CERT_DIR"
 
 echo "[*] Certificate generation complete. Sleeping to keep sidecar alive."
-exec sleep infinity 
+exec sleep infinity

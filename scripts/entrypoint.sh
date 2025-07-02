@@ -18,4 +18,4 @@ if [ "${TLS_ENABLED:-}" = "1" ] || [ -n "${SSL_CERTFILE:-}" ]; then
   fi
 fi
 
-exec sh -c "${CMD}" 
+exec sh -c "${CMD}"

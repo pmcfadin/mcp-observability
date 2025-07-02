@@ -61,4 +61,4 @@ The table below maps **top-level directories** to their purpose. For a deeper di
 
 ---
 
-*Next up:* read `file-layout.md` for a detailed file-by-file explanation. 
+*Next up:* read `file-layout.md` for a detailed file-by-file explanation.

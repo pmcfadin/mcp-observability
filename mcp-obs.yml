@@ -110,4 +110,4 @@ volumes:
   prom-data:
   tempo-data:
   grafana-data:
-  certs: 
+  certs:

@@ -137,4 +137,4 @@ Scale vertical resources according to ingest volume.
 
 > "You are an AI DevOps agent. Deploy mcp-observability mcp-server and Grafana to AWS Fargate. Requirements:\n\n* Build image from `Dockerfile` in repo; push to ECR.\n* Provision task definitions with env vars `MCP_TOKEN`, `GF_ADMIN_PASSWORD`.\n* Expose ALB HTTPS with ACM cert.\n* Attach Spot capacity where possible."
 
---- 
+---

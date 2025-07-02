@@ -18,4 +18,4 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade pip
       - name: Validate dashboards
-        run: python scripts/ci/validate_dashboards.py 
+        run: python scripts/ci/validate_dashboards.py

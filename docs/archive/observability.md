@@ -32,4 +32,4 @@ OpenTelemetry Prometheus exporter) at `/metrics` on the same port.
 
 Under `grafana/dashboards/` JSON dashboard definitions are provisioned
 automatically when running the stack.  Copy them to your central Grafana for a
-quick start. 
+quick start.

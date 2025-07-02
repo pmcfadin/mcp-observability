@@ -116,4 +116,4 @@ dashboards:
   enabled: true
   # If true, bundles the pre-built Grafana dashboards JSON into a ConfigMap
   # and mounts it under /grafana/dashboards in the Grafana deployment (sub-chart logic)
-  label: grafana_dashboard 
+  label: grafana_dashboard

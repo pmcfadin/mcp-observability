@@ -174,4 +174,4 @@ PersistentVolumeClaims created by sub-charts are **not** deleted automatically; 
 ## 8.1 · Troubleshooting CRDs & PV binding
 
 * **CRDs not installed** – ensure you run `helm dependency update charts/mcp-obs`; sub-charts such as Loki ship CRDs that Helm must apply.
-* **PVC stuck in Pending** – confirm your cluster has a default StorageClass and enough capacity; list classes with `kubectl get sc`. 
+* **PVC stuck in Pending** – confirm your cluster has a default StorageClass and enough capacity; list classes with `kubectl get sc`.

@@ -13,6 +13,7 @@ layers.
 Keeping the file < 500 LoC ensures readability and satisfies the repository
 contribution guidelines.
 """
+
 from __future__ import annotations
 
 from enum import Enum

@@ -1,5 +1,5 @@
 import pytest
-from httpx import Response, ConnectError
+from httpx import ConnectError, Response
 from pytest_httpx import HTTPXMock
 
 from app.clients import LokiClient

@@ -26,4 +26,4 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 8000
 
 # Default command relies on entrypoint script which handles TLS flags
-ENTRYPOINT ["/entrypoint.sh"] 
+ENTRYPOINT ["/entrypoint.sh"]

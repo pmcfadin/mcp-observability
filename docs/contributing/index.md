@@ -14,4 +14,4 @@ Detailed contributor documentation will be added in follow-up PRs.
 - [CI & Release Automation](ci.md)
 - [FAQ](faq.md)
 
-Thank you for your interest in contributing! More pages will be added shortly. 
+Thank you for your interest in contributing! More pages will be added shortly.

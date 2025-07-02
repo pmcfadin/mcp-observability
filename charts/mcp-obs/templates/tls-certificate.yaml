@@ -15,4 +15,4 @@ spec:
   dnsNames:
     - "{{ include "mcp-obs.fullname" . }}-server"
     - "{{ include "mcp-obs.fullname" . }}-server.{{ .Release.Namespace }}.svc"
-{{- end }} 
+{{- end }}
