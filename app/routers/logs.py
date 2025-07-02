@@ -48,3 +48,35 @@ async def logs_search(
 
     logs = await client.search_logs(request.query, request.service, request.range)
     return {"logs": logs}
+
+
+# ---------------------------------------------------------------------------
+# Internal helper wrappers used by tests -------------------------------------
+# ---------------------------------------------------------------------------
+
+
+async def _fetch_error_logs(
+    limit: int = 100,
+    service: str | None = None,
+    time_range: str | None = None,
+) -> list[str]:
+    """Convenience wrapper so unit-tests can call Loki fetch directly.
+
+    It instantiates a `LokiClient` with default settings and delegates to the
+    real implementation.  Not used by production endpoints but kept to avoid
+    breaking existing tests.
+    """
+
+    client = LokiClient()
+    return await client.fetch_error_logs(limit, service, time_range)
+
+
+async def _search_logs(
+    query: str,
+    service: str | None = None,
+    time_range: str | None = None,
+) -> list[str]:
+    """Wrapper for unit tests to call `LokiClient.search_logs`."""
+
+    client = LokiClient()
+    return await client.search_logs(query, service, time_range)

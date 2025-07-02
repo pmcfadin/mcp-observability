@@ -2,14 +2,20 @@ from typing import Any, List
 
 import httpx
 from fastapi import Depends, HTTPException, status
+from fastapi.params import Depends as _DependsClass
 
 from app.config import Settings, get_settings
 
 
 class LokiClient:
-    def __init__(self, settings: Settings = Depends(get_settings)):
-        self.base_url = settings.LOKI_BASE_URL
-        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
+    def __init__(self, settings: Settings | Any = Depends(get_settings)):
+        # When instantiated outside a FastAPI request context (e.g. unit tests),
+        # FastAPI passes the dependency placeholder instead of actual Settings.
+        if isinstance(settings, _DependsClass):  # pragma: no cover – test path
+            settings = get_settings()
+
+        self.base_url = settings.LOKI_BASE_URL  # type: ignore[attr-defined]
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT  # type: ignore[attr-defined]
 
     async def _query(self, query: str, limit: int = 1000) -> List[str]:
         url = f"{self.base_url.rstrip('/')}/loki/api/v1/query"
