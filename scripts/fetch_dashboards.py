@@ -95,4 +95,4 @@ def main(argv: list[str] | None = None) -> None:  # noqa: D401
 
 
 if __name__ == "__main__":
-    main() 
+    main()

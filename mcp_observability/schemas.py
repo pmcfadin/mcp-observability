@@ -217,6 +217,7 @@ class SamplingResponse(BaseModel):
 # Initialize Handshake (Lifecycle)
 # ---------------------------------------------------------------------------
 
+
 class ClientInfo(BaseModel):
     name: str
     version: Optional[str] = None
@@ -243,7 +244,9 @@ class Capabilities(BaseModel):
 
 
 class InitializeRequest(BaseModel):
-    version: str = Field(..., description="MCP protocol version requested by the client")
+    version: str = Field(
+        ..., description="MCP protocol version requested by the client"
+    )
     client: ClientInfo
     capabilities: Optional[Capabilities] = None
 

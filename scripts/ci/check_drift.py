@@ -53,4 +53,4 @@ if missing_in_compose or missing_in_helm:
         print(f"Services missing in Helm: {', '.join(sorted(missing_in_helm))}")
     sys.exit(1)
 
-print("Compose and Helm manifests are in sync ✅") 
+print("Compose and Helm manifests are in sync ✅")
