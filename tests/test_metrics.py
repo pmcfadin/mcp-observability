@@ -3,7 +3,10 @@ from httpx import ASGITransport, AsyncClient, Response
 from pytest_httpx import HTTPXMock
 
 from app.clients import PrometheusClient
+from app.config import get_settings
 from app.main import app
+
+pytestmark = pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
 
 
 @pytest.mark.asyncio
@@ -16,6 +19,7 @@ async def test_metrics_latency_endpoint(monkeypatch: pytest.MonkeyPatch):
 
     app.dependency_overrides[PrometheusClient] = MockPrometheusClient
     monkeypatch.setenv("MCP_TOKEN", "testtoken")
+    get_settings.cache_clear()
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

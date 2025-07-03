@@ -114,6 +114,9 @@ async def test_logs_errors_endpoint(monkeypatch: pytest.MonkeyPatch):
 
     app.dependency_overrides[LokiClient] = MockLokiClient
     monkeypatch.setenv("MCP_TOKEN", "testtoken")
+    from app.config import get_settings
+
+    get_settings.cache_clear()
 
     transport = ASGITransport(app=app, raise_app_exceptions=True)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

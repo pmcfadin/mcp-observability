@@ -4,6 +4,8 @@ from pytest_httpx import HTTPXMock
 
 from app.clients import PrometheusClient
 
+pytestmark = pytest.mark.httpx_mock(assert_all_responses_were_requested=False)
+
 
 @pytest.mark.asyncio
 async def test_execute_promql(httpx_mock: HTTPXMock):

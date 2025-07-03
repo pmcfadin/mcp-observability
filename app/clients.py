@@ -77,9 +77,12 @@ class LokiClient:
 
 
 class PrometheusClient:
-    def __init__(self, settings: Settings = Depends(get_settings)):
-        self.base_url = settings.PROMETHEUS_BASE_URL
-        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
+    def __init__(self, settings: Any = Depends(get_settings)):
+        if isinstance(settings, _DependsClass):  # pragma: no cover
+            settings = get_settings()
+
+        self.base_url = settings.PROMETHEUS_BASE_URL  # type: ignore[attr-defined]
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT  # type: ignore[attr-defined]
 
     async def _query(self, promql: str) -> Any:
         url = f"{self.base_url.rstrip('/')}/api/v1/query"
@@ -129,9 +132,12 @@ class PrometheusClient:
 
 
 class TempoClient:
-    def __init__(self, settings: Settings = Depends(get_settings)):
-        self.base_url = settings.TEMPO_BASE_URL
-        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
+    def __init__(self, settings: Any = Depends(get_settings)):
+        if isinstance(settings, _DependsClass):  # pragma: no cover
+            settings = get_settings()
+
+        self.base_url = settings.TEMPO_BASE_URL  # type: ignore[attr-defined]
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT  # type: ignore[attr-defined]
 
     async def fetch_trace_json(self, trace_id: str) -> Any:
         url = f"{self.base_url.rstrip('/')}/api/traces/{trace_id}"
@@ -152,9 +158,12 @@ class TempoClient:
 
 
 class AlertManagerClient:
-    def __init__(self, settings: Settings = Depends(get_settings)):
-        self.base_url = settings.ALERTMANAGER_BASE_URL
-        self.timeout = settings.DEFAULT_HTTP_TIMEOUT
+    def __init__(self, settings: Any = Depends(get_settings)):
+        if isinstance(settings, _DependsClass):  # pragma: no cover
+            settings = get_settings()
+
+        self.base_url = settings.ALERTMANAGER_BASE_URL  # type: ignore[attr-defined]
+        self.timeout = settings.DEFAULT_HTTP_TIMEOUT  # type: ignore[attr-defined]
 
     async def fetch_active_alerts(
         self, severity: str | None = None, service: str | None = None

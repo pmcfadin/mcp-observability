@@ -4,6 +4,7 @@ from statistics import quantiles
 
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from app.main import app
 
 TOKEN = "secret"
@@ -11,6 +12,7 @@ TOKEN = "secret"
 
 def test_health_latency_p95_under_150ms() -> None:
     os.environ["MCP_TOKEN"] = TOKEN
+    get_settings.cache_clear()
     client = TestClient(app)
 
     durations: list[float] = []
